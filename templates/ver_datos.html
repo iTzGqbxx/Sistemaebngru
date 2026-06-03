@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema Escolar - Ver Registros</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <style>
+        /* Estilos específicos para la visualización de tablas en la versión 1 */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            margin-bottom: 30px;
+            background-color: #ffffff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        th, td {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 12px;
+            font-size: 14px;
+        }
+        th {
+            background-color: #1a4a75;
+            color: white;
+            font-weight: bold;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+        .tabla-titulo {
+            color: #1a4a75;
+            margin-top: 25px;
+            border-left: 5px solid #1a4a75;
+            padding-left: 10px;
+        }
+        .sin-datos {
+            padding: 20px;
+            text-align: center;
+            color: #666666;
+            background-color: #f9f9f9;
+            border: 1px dashed #cccccc;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Control de Estudios - E.B.N. General Rafael Urdaneta</h1>
+        <nav>
+            <a href="{{ url_for('dashboard') }}" style="margin-right: 15px;">Inicio</a>
+            <a href="{{ url_for('logout') }}">Cerrar Sesión</a>
+        </nav>
+    </header>
+    <hr>
+
+    <main>
+        <h2>Registros del Sistema</h2>
+        <p>A continuación se muestran los datos registrados de estudiantes inscritos y documentos generados en la base de datos.</p>
+
+        <h3 class="tabla-titulo">Estudiantes Inscritos</h3>
+        {% if inscripciones %}
+        <div style="overflow-x: auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Cédula</th>
+                        <th>Nombre</th>
+                        <th>Apellido</th>
+                        <th>Grado / Sección</th>
+                        <th>Representante (Madre)</th>
+                        <th>Cédula Madre</th>
+                        <th>Representante (Padre)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ins in inscripciones %}
+                    <tr>
+                        <td>{{ ins.id }}</td>
+                        <td>{{ ins.cedula }}</td>
+                        <td>{{ ins.nombre }}</td>
+                        <td>{{ ins.apellido }}</td>
+                        <td>{{ ins.ano_cursado }}</td>
+                        <td>{{ ins.rep_nombre }}</td>
+                        <td>{{ ins.rep_correo }}</td> <!-- Guardamos la cédula de la madre en rep_correo para simplificar -->
+                        <td>{{ ins.rep_apellido }}</td> <!-- Guardamos el nombre del padre en rep_apellido para simplificar -->
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="sin-datos">No hay inscripciones registradas actualmente.</div>
+        {% endif %}
+
+        <h3 class="tabla-titulo">Documentos Registrados</h3>
+        {% if documentos %}
+        <div style="overflow-x: auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Tipo de Documento</th>
+                        <th>Cédula</th>
+                        <th>Nombre</th>
+                        <th>Apellido</th>
+                        <th>Grado/Año</th>
+                        <th>Calificación / Literal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for doc in documentos %}
+                    <tr>
+                        <td>{{ doc.id }}</td>
+                        <td>{{ doc.tipo_documento }}</td>
+                        <td>{{ doc.cedula }}</td>
+                        <td>{{ doc.nombre }}</td>
+                        <td>{{ doc.apellido }}</td>
+                        <td>{{ doc.ano_cursado }}</td>
+                        <td>{{ doc.literal or 'N/A' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="sin-datos">No hay documentos registrados actualmente.</div>
+        {% endif %}
+    </main>
+    <hr>
+
+    <footer>
+        <p style="text-align: center;">© 2026 Prototipo de Sistema de Matrícula - E.B.N. General Rafael Urdaneta</p>
+    </footer>
+
+</body>
+</html>

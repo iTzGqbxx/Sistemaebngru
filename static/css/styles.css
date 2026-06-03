@@ -1,0 +1,585 @@
+/* 1. CONFIGURACIÓN GENERAL Y FUENTE */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f4f6f9;
+    /* Un gris muy claro de fondo para descansar la vista */
+    color: #333333;
+    /* Color del texto principal */
+    margin: 0;
+    padding: 15px;
+}
+
+/* 2. ENCABEZADO (HEADER) */
+header {
+    background-color: #1a4a75;
+    /* Azul institucional */
+    color: #ffffff;
+    /* Texto en blanco */
+    padding: 20px;
+    text-align: center;
+    border-radius: 8px;
+    /* Bordes redondeados */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    /* Sombra suave */
+}
+
+header h1 {
+    margin: 0;
+    font-size: 22px;
+}
+
+header nav a {
+    color: #ffcc00;
+    /* Color amarillo llamativo para el enlace */
+    text-decoration: none;
+    font-weight: bold;
+    display: inline-block;
+    margin-top: 10px;
+}
+
+/* 3. BLOQUE PRINCIPAL (MAIN) */
+main {
+    background-color: #ffffff;
+    /* Fondo blanco para el contenido */
+    margin-top: 20px;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+}
+
+main h2 {
+    color: #1a4a75;
+    border-bottom: 2px solid #1a4a75;
+    padding-bottom: 8px;
+}
+
+/* 4. SECCIONES DEL FORMULARIO (FIELDSET) */
+fieldset {
+    border: 1px solid #dcdcdc;
+    border-radius: 6px;
+    padding: 15px;
+    background-color: #fbfbfb;
+}
+
+legend {
+    color: #1a4a75;
+    padding: 0 10px;
+}
+
+/* 5. CAMPOS DE ENTRADA (INPUTS Y SELECTS) */
+input[type="text"],
+input[type="file"],
+select {
+    width: 100%;
+    /* Hace que los campos ocupen todo el ancho disponible en el móvil */
+    padding: 10px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    border: 1px solid #cccccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+    /* Evita que el padding deforme el ancho */
+    background-color: #ffffff;
+}
+
+/* Efecto interactivo: Cuando el usuario toca un campo para escribir */
+input[type="text"]:focus,
+select:focus {
+    border-color: #1a4a75;
+    outline: none;
+    background-color: #f0f7ff;
+    /* Se pone sutilmente azul al seleccionarlo */
+}
+
+/* 6. BOTÓN INTERACTIVO */
+button[type="submit"] {
+    background-color: #2e7d32;
+    /* Verde éxito */
+    color: white;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    width: 100%;
+    /* Ancho completo para que sea fácil de presionar en el teléfono */
+    margin-top: 15px;
+    transition: background-color 0.3s ease;
+    /* Transición suave de color */
+}
+
+/* Efecto interactivo: Al mantener presionado el botón */
+button[type="submit"]:active {
+    background-color: #1b5e20;
+    /* Verde más oscuro al hacer clic */
+}
+
+/* 7. PIE DE PÁGINA */
+footer {
+    text-align: center;
+    margin-top: 30px;
+    font-size: 12px;
+    color: #777777;
+}
+
+.btn-menu-hamburguesa {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0;
+    margin-right: 15px;
+    display: inline-block;
+}
+
+.barra-lateral {
+    transition: transform 0.3s ease, min-width 0.3s ease, width 0.3s ease;
+}
+
+.barra-lateral.escondido {
+    transform: translateX(-100%);
+    width: 0 !important;
+    min-width: 0 !important;
+    overflow: hidden;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+.espacio-trabajo {
+    transition: margin-left 0.3s ease, width 0.3s ease;
+}
+
+.espacio-trabajo.expandido {
+    margin-left: 0px !important;
+    width: 100% !important;
+}
+
+/* BOTONES ADICIONALES PARA EL PANEL */
+button {
+    background-color: #1a4a75;
+    /* Azul por defecto para los documentos */
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 10px;
+}
+
+/* Cuando un botón está deshabilitado por una condicional */
+button:disabled {
+    background-color: #aaaaaa !important;
+    cursor: not-allowed;
+}
+
+/* Estilo para los campos de solo lectura (como la numeración) */
+input[readonly] {
+    text-align: center;
+    border: 1px dashed #999;
+}
+
+/* --- REESTRUCTURACIÓN COMPLETA PARA EL DISEÑO DEL DASHBOARD --- */
+
+.cuerpo-dashboard {
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f4f7f6;
+}
+
+/* Encabezado Superior (Fijo arriba) */
+.encabezado-sistema {
+    background-color: #0b3c5d;
+    /* Azul oscuro como la imagen */
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 25px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 70px;
+    box-sizing: border-box;
+    z-index: 1000;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+}
+
+.info-colegio {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.escudo-placeholder {
+    width: 40px;
+    height: 40px;
+    border: 2px solid white;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.info-colegio h1 {
+    font-size: 18px;
+    margin: 0;
+    font-weight: 600;
+}
+
+.info-colegio p {
+    font-size: 12px;
+    margin: 2px 0 0 0;
+    color: #cbdad5;
+}
+
+.usuario-logout {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.avatar-placeholder {
+    width: 35px;
+    height: 35px;
+    background-color: #cccccc;
+    border-radius: 50%;
+}
+
+.btn-logout {
+    background-color: #556270;
+    color: white;
+    text-decoration: none;
+    padding: 6px 14px;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: bold;
+    transition: background 0.2s;
+}
+
+.btn-logout:hover {
+    background-color: #454e59;
+}
+
+/* Contenedor de la Distribución Horizontal */
+.interfaz-contenedor {
+    display: flex;
+    margin-top: 70px;
+    /* Desplazamiento por la barra superior */
+    min-height: calc(100vh - 70px);
+}
+
+/* Barra Lateral de Opciones */
+.barra-lateral {
+    width: 220px;
+    background-color: #1d2731;
+    /* Azul pizarra oscuro */
+    position: fixed;
+    top: 70px;
+    left: 0;
+    height: calc(100vh - 70px);
+    box-sizing: border-box;
+    padding-top: 10px;
+}
+
+.menu-navegacion {
+    display: flex;
+    flex-direction: column;
+}
+
+.enlace-nav {
+    color: #9fa8a3;
+    text-decoration: none;
+    padding: 15px 20px;
+    font-size: 14px;
+    border-left: 4px solid transparent;
+    transition: all 0.2s;
+}
+
+.enlace-nav:hover,
+.enlace-nav.activo {
+    color: white;
+    background-color: #2c3e50;
+    border-left: 4px solid #3498db;
+}
+
+/* Espacio de trabajo (Derecha) */
+.espacio-trabajo {
+    margin-left: 220px;
+    /* Margen para respetar la barra lateral fija */
+    padding: 30px;
+    width: calc(100% - 220px);
+    box-sizing: border-box;
+}
+
+.titulo-seccion {
+    font-size: 24px;
+    color: #222222;
+    text-align: center;
+    font-weight: bold;
+    letter-spacing: 1px;
+    margin-bottom: 25px;
+}
+
+/* Barra de Herramientas y Filtros */
+.barra-herramientas-filtros {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.buscador-estudiante {
+    flex: 2;
+    padding: 10px 15px;
+    border: 1px solid #cccccc;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+.filtro-seleccion {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #cccccc;
+    border-radius: 6px;
+    background-color: white;
+    font-size: 14px;
+}
+
+/* Área de Configuración */
+.tarjeta-config-logos {
+    background-color: #fff;
+    border: 1px dashed #b6c2c9;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 25px;
+}
+
+.tarjeta-config-logos h5 {
+    margin: 0 0 5px 0;
+    font-size: 14px;
+    color: #333;
+}
+
+.tarjeta-config-logos label {
+    font-size: 12px;
+    color: #666;
+}
+
+/* Distribución de las Tarjetas de Documentos hacia los lados */
+.cuadricula-documentos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 25px;
+}
+
+/* Tarjeta de Documento Estilo la Imagen de Referencia */
+.tarjeta-documento {
+    background-color: white;
+    border-radius: 12px;
+    padding: 20px;
+    flex: 1 1 calc(33.333% - 25px);
+    /* Se disponen de 3 en 3 hacia los lados si hay espacio */
+    min-width: 280px;
+    box-sizing: border-box;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    justify-content: space-between;
+}
+
+.tarjeta-documento h3 {
+    font-size: 16px;
+    color: #111;
+    margin: 15px 0 10px 0;
+    font-weight: bold;
+}
+
+.tarjeta-documento p {
+    font-size: 13px;
+    color: #666;
+    margin: 0 0 15px 0;
+    line-height: 1.4;
+}
+
+/* Campos extra dentro de las tarjetas */
+.campos-tarjeta {
+    width: 100%;
+    margin-bottom: 15px;
+}
+
+.readonly-badge,
+.input-tarjeta,
+.select-tarjeta {
+    width: 100%;
+    padding: 8px;
+    margin-top: 5px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 12px;
+    box-sizing: border-box;
+}
+
+.readonly-badge {
+    background-color: #f0f0f0;
+    text-align: center;
+    font-weight: bold;
+}
+
+/* Simulación visual de los gráficos centrales de las tarjetas */
+.documento-icono-area {
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.icono-doc-grafico {
+    width: 50px;
+    height: 60px;
+    border-radius: 4px;
+    position: relative;
+    border: 2px solid #aaa;
+}
+
+.icono-doc-grafico::before {
+    content: '';
+    position: absolute;
+    top: 10px;
+    left: 8px;
+    width: 25px;
+    height: 3px;
+    background-color: #aaa;
+    box-shadow: 0 8px 0 #aaa, 0 16px 0 #aaa;
+}
+
+/* Colores de Bordes e Iconos según la Tarjeta */
+.borde-verde {
+    border: 3px solid #5cd699;
+}
+
+.doc-verde {
+    border-color: #5cd699;
+}
+
+.doc-verde::before {
+    background-color: #5cd699;
+    box-shadow: 0 8px 0 #5cd699, 0 16px 0 #5cd699;
+}
+
+.borde-azul {
+    border: 3px solid #3498db;
+}
+
+.doc-azul {
+    border-color: #3498db;
+}
+
+.doc-azul::before {
+    background-color: #3498db;
+    box-shadow: 0 8px 0 #3498db, 0 16px 0 #3498db;
+}
+
+.borde-gris {
+    border: 3px solid #95a5a6;
+}
+
+.doc-gris {
+    border-color: #95a5a6;
+}
+
+.doc-gris::before {
+    background-color: #95a5a6;
+    box-shadow: 0 8px 0 #95a5a6, 0 16px 0 #95a5a6;
+}
+
+.borde-rojo {
+    border: 3px solid #e74c3c;
+}
+
+.doc-rojo {
+    border-color: #e74c3c;
+}
+
+.doc-rojo::before {
+    background-color: #e74c3c;
+    box-shadow: 0 8px 0 #e74c3c, 0 16px 0 #e74c3c;
+}
+
+/* Botones de Acción "Generar" */
+.btn-generar {
+    width: 70%;
+    padding: 10px;
+    border: none;
+    border-radius: 20px;
+    /* Redondos como la imagen */
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.1s;
+}
+
+.btn-generar:active {
+    transform: scale(0.96);
+}
+
+.bg-verde {
+    background-color: #5cd699;
+}
+
+.bg-azul {
+    background-color: #2980b9;
+}
+
+.bg-gris {
+    background-color: #7f8c8d;
+}
+
+.bg-rojo {
+    background-color: #e74c3c;
+}
+
+.btn-generar:disabled {
+    background-color: #bdc3c7 !important;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.nota-restriccion {
+    font-size: 11px !important;
+    color: #c0392b !important;
+    background-color: #fdede9;
+    /* Corregido: cambiado 'g' por '9' */
+    padding: 6px;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+/* Botón especial para la carga de logos */
+.btn-subir-simulado {
+    background-color: #fff !important;
+    color: #1a4a75 !important;
+    border: 2px dashed #1a4a75 !important;
+    border-radius: 6px !important;
+    padding: 10px 15px !important;
+    font-size: 13px !important;
+    font-weight: bold !important;
+    cursor: pointer !important;
+    width: auto !important;
+    /* No ocupa toda la pantalla */
+    margin: 0 !important;
+}
+
+/* Corregido: Llave de cierre agregada */

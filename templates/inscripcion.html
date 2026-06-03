@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema Escolar - Registro Completo</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+
+    <header>
+        <h1>Control de Estudios - E.B.N. General Rafael Urdaneta</h1>
+        <nav>
+            <a href="{{ url_for('dashboard') }}" style="margin-right: 15px;">Inicio</a>
+            <a href="{{ url_for('logout') }}">Cerrar Sesión</a>
+        </nav>
+    </header>
+    <hr>
+
+    <main>
+        <h2>Módulo de Inscripción y Matrícula</h2>
+        <p>Complete todos los campos del estudiante, representantes y adjunte los requisitos legales exigidos.</p>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }}" style="color: #27ae60; background-color: #ebf7ee; padding: 10px; border-radius: 6px; margin-bottom: 20px; font-size: 13px; font-weight: bold; border: 1px solid #2ecc71; text-align: center;">
+                ✅ {{ message }}
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <form action="{{ url_for('inscripcion') }}" method="POST" enctype="multipart/form-data">
+            
+            <fieldset>
+                <legend><strong>1. Ubicación Académica</strong></legend>
+                <br>
+                <label for="grado">Grado a Cursar:</label>
+                <select id="grado" name="grado" required>
+                    <option value="">-- Seleccione el Grado --</option>
+                    <option value="1">1er Grado</option>
+                    <option value="2">2do Grado</option>
+                    <option value="3">3er Grado</option>
+                    <option value="4">4to Grado</option>
+                    <option value="5">5to Grado</option>
+                </select>
+                &nbsp;&nbsp;
+                <label for="seccion">Sección Asignada:</label>
+                <select id="seccion" name="seccion" required>
+                    <option value="">-- Seleccione la Sección --</option>
+                    <option value="A">Sección A</option>
+                    <option value="B">Sección B</option>
+                    <option value="C">Sección C</option>
+                    <option value="D">Sección D</option>
+                </select>
+                <br><br>
+            </fieldset>
+            <br>
+
+            <fieldset>
+                <legend><strong>2. Datos del Estudiante</strong></legend>
+                <br>
+                <label for="cedula_estudiantil">Cédula Estudiantil / Escolar:</label><br>
+                <input type="text" id="cedula_estudiantil" name="cedula_estudiantil" placeholder="Ej. V-11500000000" required><br><br>
+
+                <label for="nombres_estudiante">Nombres Completos:</label><br>
+                <input type="text" id="nombres_estudiante" name="nombres_estudiante" required><br><br>
+
+                <label for="apellidos_estudiante">Apellidos Completos:</label><br>
+                <input type="text" id="apellidos_estudiante" name="apellidos_estudiante" required><br><br>
+            </fieldset>
+            <br>
+
+            <fieldset>
+                <legend><strong>3. Información de los Padres</strong></legend>
+                <br>
+                <h3>Datos de la Madre:</h3>
+                <label for="cedula_madre">Cédula de la Madre:</label><br>
+                <input type="text" id="cedula_madre" name="cedula_madre" placeholder="Ej. V-15000000" required><br><br>
+
+                <label for="nombre_madre">Nombres y Apellidos de la Madre:</label><br>
+                <input type="text" id="nombre_madre" name="nombre_madre" required><br><br>
+
+                <h3>Datos del Padre:</h3>
+                <label for="cedula_padre">Cédula del Padre (Opcional):</label><br>
+                <input type="text" id="cedula_padre" name="cedula_padre" placeholder="Ej. V-14000000"><br><br>
+
+                <label for="nombre_padre">Nombres y Apellidos del Padre:</label><br>
+                <input type="text" id="nombre_padre" name="nombre_padre"><br><br>
+            </fieldset>
+            <br>
+
+            <fieldset>
+                <legend><strong>4. Requisitos y Documentos Adjuntos</strong></legend>
+                <br>
+                <p>Suba los documentos digitalizados en formato PDF o imagen (PNG/JPG):</p>
+
+                <label for="doc_partida"><strong>Partida de Nacimiento del Estudiante:</strong></label><br>
+                <input type="file" id="doc_partida" name="doc_partida" accept=".pdf, .png, .jpg, .jpeg"><br><br>
+
+                <label for="doc_cedula_madre"><strong>Cédula de Identidad de la Madre:</strong></label><br>
+                <input type="file" id="doc_cedula_madre" name="doc_cedula_madre" accept=".pdf, .png, .jpg, .jpeg"><br><br>
+
+                <label for="doc_cedula_padre"><strong>Cédula de Identidad del Padre:</strong></label><br>
+                <input type="file" id="doc_cedula_padre" name="doc_cedula_padre" accept=".pdf, .png, .jpg, .jpeg"><br><br>
+
+                <label for="doc_fotos"><strong>Fotos tipo Carnet del Estudiante:</strong></label><br>
+                <input type="file" id="doc_fotos" name="doc_fotos" accept="image/*"><br><br>
+            </fieldset>
+            <br>
+
+            <div style="text-align: center;">
+                <button type="submit" style="padding: 10px 20px; font-size: 16px;">Guardar e Inscribir Estudiante</button>
+            </div>
+
+        </form>
+    </main>
+    <hr>
+
+    <footer>
+        <p style="text-align: center;">© 2026 Prototipo de Sistema de Matrícula - E.B.N. General Rafael Urdaneta</p>
+    </footer>
+
+</body>
+</html>

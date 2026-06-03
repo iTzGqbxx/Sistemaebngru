@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema Escolar - Registro de Documento</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+
+    <header>
+        <h1>Control de Estudios - E.B.N. General Rafael Urdaneta</h1>
+        <nav>
+            <a href="{{ url_for('dashboard') }}" style="margin-right: 15px;">Inicio</a>
+            <a href="{{ url_for('logout') }}">Cerrar Sesión</a>
+        </nav>
+    </header>
+    <hr>
+
+    <main>
+        <h2>Módulo de Registro de Documentos</h2>
+        <p>Complete los datos correspondientes para generar y registrar un nuevo documento.</p>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }}" style="color: #27ae60; background-color: #ebf7ee; padding: 10px; border-radius: 6px; margin-bottom: 20px; font-size: 13px; font-weight: bold; border: 1px solid #2ecc71; text-align: center;">
+                ✅ {{ message }}
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <form action="{{ url_for('documentos') }}" method="POST">
+            <fieldset>
+                <legend><strong>Datos del Documento</strong></legend>
+                <br>
+                <label for="tipo_documento">Tipo de Documento:</label>
+                <select id="tipo_documento" name="tipo_documento" required>
+                    <option value="">-- Seleccione --</option>
+                    <option value="Planilla de Inscripción">Planilla de Inscripción</option>
+                    <option value="Constancia de Estudio">Constancia de Estudio</option>
+                    <option value="Constancia de Cupo">Constancia de Cupo</option>
+                    <option value="Certificación de Promoción">Certificación de Promoción</option>
+                    <option value="Constancia de Comportamiento">Constancia de Comportamiento</option>
+                    <option value="Constancia de Retiro">Constancia de Retiro</option>
+                    <option value="Constancia de Prosecución">Constancia de Prosecución</option>
+                    <option value="Constancia de Inscripción">Constancia de Inscripción</option>
+                </select>
+                <br><br>
+
+                <label for="nombre">Nombre del Estudiante:</label><br>
+                <input type="text" id="nombre" name="nombre" required><br><br>
+
+                <label for="apellido">Apellido del Estudiante:</label><br>
+                <input type="text" id="apellido" name="apellido" required><br><br>
+
+                <label for="cedula">Cédula de Identidad del Estudiante <small>(Sin prefijo V-, Ej: 31123456)</small>:</label><br>
+                <input type="text" id="cedula" name="cedula" placeholder="Ej: 31123456" required><br><br>
+
+                <label for="ano_cursado">Año/Grado Cursado:</label><br>
+                <select id="ano_cursado" name="ano_cursado" required>
+                    <option value="">-- Seleccione --</option>
+                    <option value="1er Grado">1er Grado</option>
+                    <option value="2do Grado">2do Grado</option>
+                    <option value="3er Grado">3er Grado</option>
+                    <option value="4to Grado">4to Grado</option>
+                    <option value="5to Grado">5to Grado</option>
+                    <option value="6to Grado">6to Grado</option>
+                </select>
+                <br><br>
+
+                <label for="literal">Literal de Calificación / Sección (Opcional):</label><br>
+                <input type="text" id="literal" name="literal" placeholder="Ej: A, B, Excelente, etc."><br><br>
+            </fieldset>
+            <br>
+
+            <div style="text-align: center;">
+                <button type="submit" style="padding: 10px 20px; font-size: 16px;">Registrar Documento</button>
+            </div>
+        </form>
+    </main>
+    <hr>
+
+    <footer>
+        <p style="text-align: center;">© 2026 Prototipo de Sistema de Matrícula - E.B.N. General Rafael Urdaneta</p>
+    </footer>
+
+</body>
+</html>

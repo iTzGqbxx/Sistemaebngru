@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conexión al Sistema - E.B.N. Gen. Rafael Urdaneta</title>
+    
+    <!-- ESTILOS INTERNOS INTEGRADOS PARA EVITAR FALLOS EN WEBCODE -->
+    <style>
+        /* Fondo de pantalla tecnológico e institucional */
+        body.cuerpo-login {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        /* Tarjeta contenedora del Login */
+        .contenedor-login {
+            background-color: #ffffff;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 380px;
+            padding: 30px 24px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        /* Símbolo de programación superior */
+        .logo-sistema-simbolo {
+            font-size: 28px;
+            color: #1a4a75;
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        /* Título Principal */
+        .contenedor-login h2 {
+            color: #111111;
+            font-size: 20px;
+            font-weight: 700;
+            margin: 0 0 6px 0;
+            letter-spacing: 0.5px;
+            line-height: 1.3;
+        }
+
+        /* Subtítulo institucional del Colegio */
+        .subtitulo-colegio {
+            color: #666666;
+            font-size: 14px;
+            margin: 0 0 25px 0;
+            font-weight: 500;
+        }
+
+        /* Estructura del formulario */
+        .formulario-login {
+            width: 100%;
+            text-align: left;
+        }
+
+        /* Contenedor de cada grupo de entrada */
+        .grupo-entrada {
+            margin-bottom: 20px;
+        }
+
+        /* Etiquetas informativas */
+        .grupo-entrada label {
+            display: block;
+            color: #333333;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        /* Campos de texto y contraseña estilizados */
+        .grupo-entrada input {
+            width: 100%;
+            padding: 12px 14px;
+            background-color: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            color: #333333;
+            font-size: 14px;
+            box-sizing: border-box;
+            transition: all 0.2s ease;
+        }
+
+        /* Efecto de enfoque cuando el usuario escribe */
+        .grupo-entrada input:focus {
+            border-color: #1a4a75;
+            background-color: #ffffff;
+            box-shadow: 0 0 0 3px rgba(26, 74, 117, 0.15);
+            outline: none;
+        }
+
+        /* Indicador de Entorno de Base de Datos */
+        .indicador-entorno {
+            font-size: 12px;
+            color: #27ae60;
+            margin: 15px 0 25px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+            background-color: #ebf7ee;
+            padding: 10px;
+            border-radius: 6px;
+        }
+
+        /* Punto verde parpadeante de conexión */
+        .punto-verde {
+            width: 8px;
+            height: 8px;
+            background-color: #2ecc71;
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 8px #2ecc71;
+        }
+
+        /* Botón de ingreso verde institucional */
+        .btn-ingresar-sistema {
+            width: 100%;
+            padding: 14px;
+            background-color: #27ae60;
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(39, 174, 96, 0.2);
+            transition: background-color 0.2s ease, transform 0.1s ease;
+        }
+
+        .btn-ingresar-sistema:active {
+            transform: scale(0.98);
+            background-color: #219653;
+        }
+
+        /* Pie de la tarjeta */
+        .login-pie {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 11px;
+            color: #888888;
+            line-height: 1.4;
+            border-top: 1px solid #eeeeee;
+            padding-top: 15px;
+        }
+    </style>
+</head>
+<body class="cuerpo-login">
+
+    <div class="contenedor-login">
+        <!-- Icono de desarrollo técnico -->
+        <div class="logo-sistema-simbolo">&lt;/&gt;</div>
+        
+        <h2>SISTEMA CONTROL DE MATRÍCULA</h2>
+        <p class="subtitulo-colegio">E.B.N. General Rafael Urdaneta</p>
+
+        <!-- Formulario con envío POST y validación -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }}" style="color: #e74c3c; background-color: #fdede9; padding: 10px; border-radius: 8px; margin-bottom: 20px; font-size: 13px; font-weight: bold; border: 1px solid #fca5a5; text-align: left;">
+                ⚠️ {{ message }}
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <form class="formulario-login" method="POST" action="{{ url_for('login') }}" onsubmit="validarAcceso(event)">
+            
+            <div class="grupo-entrada">
+                <label for="usuario">Identificador del Administrador / Usuario</label>
+                <input type="text" id="usuario" name="usuario" placeholder="ejemplo: admin_urdaneta" required autocomplete="off">
+            </div>
+
+            <div class="grupo-entrada">
+                <label for="clave">Clave de Acceso (Token de Seguridad)</label>
+                <input type="password" id="clave" name="password" placeholder="••••••••••••" required>
+            </div>
+
+            <div class="indicador-entorno">
+                <span class="punto-verde"></span> Entorno Local Activo (Base de Datos Conectada)
+            </div>
+
+            <button type="submit" class="btn-ingresar-sistema">Inicializar Sistema</button>
+        </form>
+
+        <div class="login-pie">
+            <p>Detección automática: Modo Demostración Académica Activo</p>
+        </div>
+    </div>
+
+    <!-- SCRIPT DE REDIRECCIÓN INTERACTIVA -->
+    <script>
+        function validarAcceso(event) {
+            event.preventDefault(); // Evita parpadeos bruscos en el navegador del teléfono
+            
+            var form = event.target;
+            var boton = document.querySelector('.btn-ingresar-sistema');
+            boton.innerText = "Cargando componentes...";
+            boton.style.opacity = "0.8";
+            
+            setTimeout(function() {
+                // Envía el formulario de forma nativa al backend de Flask
+                form.submit();
+            }, 600); 
+        }
+    </script>
+</body>
+</html>

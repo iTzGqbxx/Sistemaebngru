@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema Escolar - Panel General</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body class="cuerpo-dashboard">
+
+    <!-- ENCABEZADO SUPERIOR AZUL (Fijo) -->
+    <header class="encabezado-sistema">
+        <div class="info-colegio">
+            <div class="escudo-placeholder">SM</div>
+            <div>
+                <button class="btn-menu-hamburguesa" onclick="alternarBarraLateral()">☰</button>
+                <h1>E.B.N. General Rafael Urdaneta</h1>
+                <p>Bienvenido(a), Directora {{ session['usuario'] }}</p>
+            </div>
+        </div>
+        <div class="usuario-logout">
+            <div class="avatar-placeholder"></div>
+            <a href="{{ url_for('logout') }}" class="btn-logout">Cerrar Sesión</a>
+        </div>
+    </header>
+
+    <!-- CONTENEDOR INTERNO DE LA INTERFAZ -->
+    <div class="interfaz-contenedor">
+        
+        <!-- BARRA LATERAL IZQUIERDA -->
+        <aside class="barra-lateral" id="sidebarMenu">
+            <nav class="menu-navegacion">
+                <a href="{{ url_for('dashboard') }}" class="enlace-nav activo"> Inicio</a>
+                <a href="{{ url_for('inscripcion') }}" class="enlace-nav"> Inscripciones</a>
+                <a href="{{ url_for('documentos') }}" class="enlace-nav"> Documentos</a>
+                <a href="{{ url_for('ver_datos') }}" class="enlace-nav"> Ver Registros</a>
+                <a href="#config" class="enlace-nav"> Configuración</a>
+            </nav>
+        </aside>
+
+        <!-- ESPACIO DE TRABAJO PRINCIPAL (LADO DERECHO) -->
+        <main class="espacio-trabajo" id="contenidoPrincipal">
+            
+            <h2 class="titulo-seccion">SELECCIONAR DOCUMENTO A GENERAR</h2>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+                {% for category, message in messages %}
+                  <div class="alert alert-{{ category }}" style="color: #27ae60; background-color: #ebf7ee; padding: 10px; border-radius: 6px; margin-bottom: 20px; font-size: 13px; font-weight: bold; border: 1px solid #2ecc71; text-align: center;">
+                    ✅ {{ message }}
+                  </div>
+                {% endfor %}
+              {% endif %}
+            {% endwith %}
+
+            <!-- BARRA DE BÚSQUEDA Y FILTROS -->
+            <div class="barra-herramientas-filtros">
+                <input type="text" placeholder="Buscar por Estudiante (Cédula/ID o Nombre)..." class="buscador-estudiante">
+                <select class="filtro-seleccion">
+                    <option>Todos los Estudiantes</option>
+                </select>
+                <select class="filtro-seleccion">
+                    <option>Filtros...</option>
+                </select>
+            </div>
+
+<!-- ENTORNO DE EDICIÓN DE LOGOS (Simulado para evitar la ventana de WebCode) -->
+<div class="tarjeta-config-logos" id="config">
+    <h5>Configuración del Sistema: Ajuste de Documentación</h5>
+    <p style="font-size: 12px; color: #666; margin-bottom: 10px;">Permite modificar los logos institucionales de los encabezados ministeriales.</p>
+    
+    <!-- Cambiamos el input de archivo por un botón de acción controlado -->
+    <button type="button" class="btn-subir-simulado" onclick="simularCargaLogo()">
+        Seleccionar Imagen de la Galería
+    </button>
+    
+    <!-- Barra de carga oculta que se activará dinámicamente -->
+    <div id="progreso-zona" style="display: none; margin-top: 12px;">
+        <div style="font-size: 11px; color: #1a4a75; margin-bottom: 4px; font-weight: bold;" id="texto-progreso">Subiendo nuevo logo: 0%</div>
+        <div style="width: 100%; background-color: #e0e0e0; height: 8px; border-radius: 4px; overflow: hidden;">
+            <div id="barra-progreso" style="width: 0%; background-color: #5cd699; height: 100%; transition: width 0.2s;"></div>
+        </div>
+    </div>
+</div>
+
+
+            <!-- CUADRÍCULA DE DOCUMENTOS (Hacia los lados) -->
+            <div class="cuadricula-documentos">
+
+                <!-- 1. PLANILLA DE INSCRIPCIÓN -->
+                <div class="tarjeta-documento borde-verde">
+                    <div class="documento-icono-area">
+                        <!-- Representación de icono limpio -->
+                        <div class="icono-doc-grafico doc-verde"></div>
+                    </div>
+                    <h3>1. Planilla de Inscripción</h3>
+                    <p>Exporta la ficha completa con los datos acumulativos del estudiante y representantes.</p>
+                    <button type="button" class="btn-generar bg-verde">Generar</button>
+                </div>
+
+                <!-- 2. CONSTANCIA DE ESTUDIO -->
+                <div class="tarjeta-documento borde-azul">
+                    <div class="documento-icono-area">
+                        <div class="icono-doc-grafico doc-azul"></div>
+                    </div>
+                    <h3>2. Constancia de Estudio</h3>
+                    <p class="nota-restriccion">Restricción: Bloqueada temporalmente hasta el inicio formal del año escolar.</p>
+                    <button type="button" class="btn-generar bg-azul" disabled>Generar</button>
+                </div>
+
+                <!-- 3. CONSTANCIA DE CUPO -->
+                <div class="tarjeta-documento borde-gris">
+                    <div class="documento-icono-area">
+                        <div class="icono-doc-grafico doc-gris"></div>
+                    </div>
+                    <h3>3. Constancia de Cupo</h3>
+                    <p>Emisión numerada y correlativa automática.</p>
+                    <div class="campos-tarjeta">
+                        <input type="text" value="N° 2026-0042" readonly class="readonly-badge">
+                        <input type="text" id="emisor_cupo" placeholder="Nombre de quien emite">
+                    </div>
+                    <button type="button" class="btn-generar bg-gris">Generar</button>
+                </div>
+
+                <!-- 4. PROMOCIÓN DE 6TO GRADO -->
+                <div class="tarjeta-documento borde-azul">
+                    <div class="documento-icono-area">
+                        <div class="icono-doc-grafico doc-azul"></div>
+                    </div>
+                    <h3>4. Certificación de Promoción</h3>
+                    <p>Certificado oficial de culminación de la Educación Primaria (6to Grado).</p>
+                    <button type="button" class="btn-generar bg-azul">Generar</button>
+                </div>
+
+                <!-- 5. CONSTANCIA DE COMPORTAMIENTO -->
+                <div class="tarjeta-documento borde-verde">
+                    <div class="documento-icono-area">
+                        <div class="icono-doc-grafico doc-verde"></div>
+                    </div>
+                    <h3>5. Constancia de Comportamiento</h3>
+                    <p>Apreciación de conducta general del estudiante.</p>
+                    <div class="campos-tarjeta">
+                        <select id="conducta" class="select-tarjeta">
+                            <option>Excelente</option>
+                            <option>Buena</option>
+                            <option>Regular</option>
+                        </select>
+                    </div>
+                    <button type="button" class="btn-generar bg-verde">Generar</button>
+                </div>
+
+                <!-- 6. CONSTANCIA DE RETIRO -->
+                <div class="tarjeta-documento borde-rojo">
+                    <div class="documento-icono-area">
+                        <div class="icono-doc-grafico doc-rojo"></div>
+                    </div>
+                    <h3>6. Constancia de Retiro</h3>
+                    <p>Procesamiento inmediato de desincorporación de la matrícula por mudanza u otros motivos.</p>
+                    <div class="campos-tarjeta">
+                        <input type="text" placeholder="Indique motivo del retiro" class="input-tarjeta">
+                    </div>
+                    <button type="button" class="btn-generar bg-rojo">Generar</button>
+                </div>
+
+                <!-- 7. CONSTANCIA DE PROSECUCIÓN -->
+                <div class="tarjeta-documento borde-gris">
+                    <div class="documento-icono-area">
+                        <div class="icono-doc-grafico doc-gris"></div>
+                    </div>
+                    <h3>7. Constancia de Prosecución</h3>
+                    <p>Garantía de continuidad de estudios en la institución para el próximo período lectivo.</p>
+                    <button type="button" class="btn-generar bg-gris">Generar</button>
+                </div>
+
+                <!-- 8. CONSTANCIA DE INSCRIPCIÓN -->
+                <div class="tarjeta-documento borde-azul">
+                    <div class="documento-icono-area">
+                        <div class="icono-doc-grafico doc-azul"></div>
+                    </div>
+                    <h3>8. Constancia de Inscripción</h3>
+                    <p>Comprobante de validación del estudiante dentro del período de matrícula activo.</p>
+                    <button type="button" class="btn-generar bg-azul">Generar</button>
+                </div>
+
+            </div>
+        </main>
+    </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- SCRIPT INTERACTIVO DEL PANEL -->
+    <script>
+        function simularCargaLogo() {
+            var zonaProgreso = document.getElementById("progreso-zona");
+            var barra = document.getElementById("barra-progreso");
+            var texto = document.getElementById("texto-progreso");
+            
+            // Mostramos la zona de carga
+            zonaProgreso.style.display = "block";
+            barra.style.width = "0%";
+            texto.innerText = "Conectando con almacenamiento: 0%";
+            
+            var porcentaje = 0;
+            // Un temporizador que aumenta el progreso progresivamente
+            var intervalo = setInterval(function() {
+                porcentaje += 10;
+                barra.style.width = porcentaje + "%";
+                texto.innerText = "Subiendo nuevo logo institucional: " + porcentaje + "%";
+                
+                if (porcentaje >= 100) {
+                    clearInterval(intervalo);
+                    texto.innerText = "¡Logo actualizado con éxito en el sistema!";
+                    texto.style.color = "#27ae60";
+                    alert("Se ha cambiado el logo institucional en las plantillas de forma correcta.");
+                }
+            }, 150); // Velocidad de la animación
+        }
+    </script>
+
+</body>
+</html>
+
+</body>
+</html>
+
