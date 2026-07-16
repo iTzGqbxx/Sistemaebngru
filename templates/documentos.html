@@ -38,14 +38,23 @@
                 <label for="tipo_documento">Tipo de Documento:</label>
                 <select id="tipo_documento" name="tipo_documento" required>
                     <option value="">-- Seleccione --</option>
-                    <option value="Planilla de Inscripción">Planilla de Inscripción</option>
-                    <option value="Constancia de Estudio">Constancia de Estudio</option>
-                    <option value="Constancia de Cupo">Constancia de Cupo</option>
-                    <option value="Certificación de Promoción">Certificación de Promoción</option>
-                    <option value="Constancia de Comportamiento">Constancia de Comportamiento</option>
-                    <option value="Constancia de Retiro">Constancia de Retiro</option>
-                    <option value="Constancia de Prosecución">Constancia de Prosecución</option>
-                    <option value="Constancia de Inscripción">Constancia de Inscripción</option>
+                    {% set req_tipo = request.args.get('tipo', '') %}
+                    {% if allowed_types %}
+                        {# Solo mostrar tipos permitidos para el rol de administración #}
+                        {% for type in allowed_types %}
+                            <option value="{{ type }}" {% if req_tipo == type %}selected{% endif %}>{{ type }}</option>
+                        {% endfor %}
+                    {% else %}
+                        {# Mostrar todos los tipos para Directora y Desarrollador #}
+                        <option value="Planilla de Inscripción" {% if req_tipo == 'Planilla de Inscripción' %}selected{% endif %}>Planilla de Inscripción</option>
+                        <option value="Constancia de Estudio" {% if req_tipo == 'Constancia de Estudio' %}selected{% endif %}>Constancia de Estudio</option>
+                        <option value="Constancia de Cupo" {% if req_tipo == 'Constancia de Cupo' %}selected{% endif %}>Constancia de Cupo</option>
+                        <option value="Certificación de Promoción" {% if req_tipo == 'Certificación de Promoción' %}selected{% endif %}>Certificación de Promoción</option>
+                        <option value="Constancia de Comportamiento" {% if req_tipo == 'Constancia de Comportamiento' %}selected{% endif %}>Constancia de Comportamiento</option>
+                        <option value="Constancia de Retiro" {% if req_tipo == 'Constancia de Retiro' %}selected{% endif %}>Constancia de Retiro</option>
+                        <option value="Constancia de Prosecución" {% if req_tipo == 'Constancia de Prosecución' %}selected{% endif %}>Constancia de Prosecución</option>
+                        <option value="Constancia de Inscripción" {% if req_tipo == 'Constancia de Inscripción' %}selected{% endif %}>Constancia de Inscripción</option>
+                    {% endif %}
                 </select>
                 <br><br>
 

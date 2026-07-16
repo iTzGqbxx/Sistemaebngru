@@ -5,6 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema Escolar - Panel General</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <script>
+        function alternarBarraLateral() {
+            var sidebar = document.getElementById("sidebarMenu");
+            var mainContent = document.getElementById("contenidoPrincipal");
+            sidebar.classList.toggle("escondido");
+            mainContent.classList.toggle("expandido");
+        }
+    </script>
 </head>
 <body class="cuerpo-dashboard">
 
@@ -14,8 +22,14 @@
             <div class="escudo-placeholder">SM</div>
             <div>
                 <button class="btn-menu-hamburguesa" onclick="alternarBarraLateral()">☰</button>
-                <h1>E.B.N. General Rafael Urdaneta</h1>
-                <p>Bienvenido(a), Directora {{ session['usuario'] }}</p>
+                <h1 style="display: inline-block; vertical-align: middle;">E.B.N. General Rafael Urdaneta</h1>
+                {% if session['rol'] == 'desarrollador' %}
+                    <p>Bienvenido(a), Desarrollador ({{ session['usuario'] }})</p>
+                {% elif session['rol'] == 'directora' %}
+                    <p>Bienvenido(a), Directora ({{ session['usuario'] }})</p>
+                {% else %}
+                    <p>Bienvenido(a), Personal de Administración ({{ session['usuario'] }})</p>
+                {% endif %}
             </div>
         </div>
         <div class="usuario-logout">
@@ -34,7 +48,9 @@
                 <a href="{{ url_for('inscripcion') }}" class="enlace-nav"> Inscripciones</a>
                 <a href="{{ url_for('documentos') }}" class="enlace-nav"> Documentos</a>
                 <a href="{{ url_for('ver_datos') }}" class="enlace-nav"> Ver Registros</a>
-                <a href="#config" class="enlace-nav"> Configuración</a>
+                {% if session['rol'] == 'desarrollador' %}
+                    <a href="#config" class="enlace-nav"> Configuración</a>
+                {% endif %}
             </nav>
         </aside>
 
@@ -64,25 +80,40 @@
                 </select>
             </div>
 
-<!-- ENTORNO DE EDICIÓN DE LOGOS (Simulado para evitar la ventana de WebCode) -->
-<div class="tarjeta-config-logos" id="config">
-    <h5>Configuración del Sistema: Ajuste de Documentación</h5>
-    <p style="font-size: 12px; color: #666; margin-bottom: 10px;">Permite modificar los logos institucionales de los encabezados ministeriales.</p>
-    
-    <!-- Cambiamos el input de archivo por un botón de acción controlado -->
-    <button type="button" class="btn-subir-simulado" onclick="simularCargaLogo()">
-        Seleccionar Imagen de la Galería
-    </button>
-    
-    <!-- Barra de carga oculta que se activará dinámicamente -->
-    <div id="progreso-zona" style="display: none; margin-top: 12px;">
-        <div style="font-size: 11px; color: #1a4a75; margin-bottom: 4px; font-weight: bold;" id="texto-progreso">Subiendo nuevo logo: 0%</div>
-        <div style="width: 100%; background-color: #e0e0e0; height: 8px; border-radius: 4px; overflow: hidden;">
-            <div id="barra-progreso" style="width: 0%; background-color: #5cd699; height: 100%; transition: width 0.2s;"></div>
-        </div>
-    </div>
-</div>
+            {% if session['rol'] == 'desarrollador' %}
+            <!-- ENTORNO DE EDICIÓN DE LOGOS (Simulado para evitar la ventana de WebCode) -->
+            <div class="tarjeta-config-logos" id="config">
+                <h5>Configuración del Sistema: Ajuste de Documentación</h5>
+                <p style="font-size: 12px; color: #666; margin-bottom: 10px;">Permite modificar los logos institucionales de los encabezados ministeriales.</p>
+                
+                <button type="button" class="btn-subir-simulado" onclick="simularCargaLogo()">
+                    Seleccionar Imagen de la Galería
+                </button>
+                
+                <div id="progreso-zona" style="display: none; margin-top: 12px;">
+                    <div style="font-size: 11px; color: #1a4a75; margin-bottom: 4px; font-weight: bold;" id="texto-progreso">Subiendo nuevo logo: 0%</div>
+                    <div style="width: 100%; background-color: #e0e0e0; height: 8px; border-radius: 4px; overflow: hidden;">
+                        <div id="barra-progreso" style="width: 0%; background-color: #5cd699; height: 100%; transition: width 0.2s;"></div>
+                    </div>
+                </div>
+            </div>
 
+            <!-- PANEL DE CONTROL DE DESARROLLADOR -->
+            <div class="tarjeta-config-logos" style="border: 2px solid #3498db; background-color: #f7fafd; margin-bottom: 25px;">
+                <h5 style="color: #2980b9; font-weight: bold; margin-bottom: 5px;">🛠️ Panel de Desarrollador - Estado del Sistema</h5>
+                <p style="font-size: 12px; color: #444; margin-bottom: 12px;">Acceso administrativo total concedido al Desarrollador. Puede eliminar y modificar cualquier registro en SQLite.</p>
+                <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                    <div style="background-color: #fff; padding: 10px; border-radius: 6px; flex: 1; border: 1px solid #cbd5e1; min-width: 120px;">
+                        <div style="font-size: 11px; color: #7f8c8d;">Base de Datos</div>
+                        <div style="font-size: 13px; font-weight: bold; color: #27ae60;">SQLite Activa (escuela.db)</div>
+                    </div>
+                    <div style="background-color: #fff; padding: 10px; border-radius: 6px; flex: 1; border: 1px solid #cbd5e1; min-width: 120px;">
+                        <div style="font-size: 11px; color: #7f8c8d;">Permisos de Borrado</div>
+                        <div style="font-size: 13px; font-weight: bold; color: #c0392b;">Habilitados (Full Delete)</div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
 
             <!-- CUADRÍCULA DE DOCUMENTOS (Hacia los lados) -->
             <div class="cuadricula-documentos">
@@ -90,12 +121,11 @@
                 <!-- 1. PLANILLA DE INSCRIPCIÓN -->
                 <div class="tarjeta-documento borde-verde">
                     <div class="documento-icono-area">
-                        <!-- Representación de icono limpio -->
                         <div class="icono-doc-grafico doc-verde"></div>
                     </div>
                     <h3>1. Planilla de Inscripción</h3>
                     <p>Exporta la ficha completa con los datos acumulativos del estudiante y representantes.</p>
-                    <button type="button" class="btn-generar bg-verde">Generar</button>
+                    <a href="{{ url_for('documentos', tipo='Planilla de Inscripción') }}" class="btn-generar bg-verde" style="text-decoration: none; display: inline-block; width: 70%; text-align: center; line-height: 20px;">Generar</a>
                 </div>
 
                 <!-- 2. CONSTANCIA DE ESTUDIO -->
@@ -119,57 +149,85 @@
                         <input type="text" value="N° 2026-0042" readonly class="readonly-badge">
                         <input type="text" id="emisor_cupo" placeholder="Nombre de quien emite">
                     </div>
-                    <button type="button" class="btn-generar bg-gris">Generar</button>
+                    <a href="{{ url_for('documentos', tipo='Constancia de Cupo') }}" class="btn-generar bg-gris" style="text-decoration: none; display: inline-block; width: 70%; text-align: center; line-height: 20px;">Generar</a>
                 </div>
 
                 <!-- 4. PROMOCIÓN DE 6TO GRADO -->
-                <div class="tarjeta-documento borde-azul">
+                <div class="tarjeta-documento borde-azul" {% if session['rol'] == 'administracion' %}style="opacity: 0.6; position: relative;"{% endif %}>
+                    {% if session['rol'] == 'administracion' %}
+                    <div style="position: absolute; top: 10px; right: 10px; background-color: #e74c3c; color: white; padding: 3px 8px; border-radius: 10px; font-size: 10px; font-weight: bold;">Restringido</div>
+                    {% endif %}
                     <div class="documento-icono-area">
                         <div class="icono-doc-grafico doc-azul"></div>
                     </div>
                     <h3>4. Certificación de Promoción</h3>
                     <p>Certificado oficial de culminación de la Educación Primaria (6to Grado).</p>
-                    <button type="button" class="btn-generar bg-azul">Generar</button>
+                    {% if session['rol'] == 'administracion' %}
+                    <button type="button" class="btn-generar bg-azul" disabled style="background-color: #bdc3c7 !important;">No Autorizado</button>
+                    {% else %}
+                    <a href="{{ url_for('documentos', tipo='Certificación de Promoción') }}" class="btn-generar bg-azul" style="text-decoration: none; display: inline-block; width: 70%; text-align: center; line-height: 20px;">Generar</a>
+                    {% endif %}
                 </div>
 
                 <!-- 5. CONSTANCIA DE COMPORTAMIENTO -->
-                <div class="tarjeta-documento borde-verde">
+                <div class="tarjeta-documento borde-verde" {% if session['rol'] == 'administracion' %}style="opacity: 0.6; position: relative;"{% endif %}>
+                    {% if session['rol'] == 'administracion' %}
+                    <div style="position: absolute; top: 10px; right: 10px; background-color: #e74c3c; color: white; padding: 3px 8px; border-radius: 10px; font-size: 10px; font-weight: bold;">Restringido</div>
+                    {% endif %}
                     <div class="documento-icono-area">
                         <div class="icono-doc-grafico doc-verde"></div>
                     </div>
                     <h3>5. Constancia de Comportamiento</h3>
                     <p>Apreciación de conducta general del estudiante.</p>
                     <div class="campos-tarjeta">
-                        <select id="conducta" class="select-tarjeta">
+                        <select id="conducta" class="select-tarjeta" {% if session['rol'] == 'administracion' %}disabled{% endif %}>
                             <option>Excelente</option>
                             <option>Buena</option>
                             <option>Regular</option>
                         </select>
                     </div>
-                    <button type="button" class="btn-generar bg-verde">Generar</button>
+                    {% if session['rol'] == 'administracion' %}
+                    <button type="button" class="btn-generar bg-verde" disabled style="background-color: #bdc3c7 !important;">No Autorizado</button>
+                    {% else %}
+                    <a href="{{ url_for('documentos', tipo='Constancia de Comportamiento') }}" class="btn-generar bg-verde" style="text-decoration: none; display: inline-block; width: 70%; text-align: center; line-height: 20px;">Generar</a>
+                    {% endif %}
                 </div>
 
                 <!-- 6. CONSTANCIA DE RETIRO -->
-                <div class="tarjeta-documento borde-rojo">
+                <div class="tarjeta-documento borde-rojo" {% if session['rol'] == 'administracion' %}style="opacity: 0.6; position: relative;"{% endif %}>
+                    {% if session['rol'] == 'administracion' %}
+                    <div style="position: absolute; top: 10px; right: 10px; background-color: #e74c3c; color: white; padding: 3px 8px; border-radius: 10px; font-size: 10px; font-weight: bold;">Restringido</div>
+                    {% endif %}
                     <div class="documento-icono-area">
                         <div class="icono-doc-grafico doc-rojo"></div>
                     </div>
                     <h3>6. Constancia de Retiro</h3>
                     <p>Procesamiento inmediato de desincorporación de la matrícula por mudanza u otros motivos.</p>
                     <div class="campos-tarjeta">
-                        <input type="text" placeholder="Indique motivo del retiro" class="input-tarjeta">
+                        <input type="text" placeholder="Indique motivo del retiro" class="input-tarjeta" {% if session['rol'] == 'administracion' %}disabled{% endif %}>
                     </div>
-                    <button type="button" class="btn-generar bg-rojo">Generar</button>
+                    {% if session['rol'] == 'administracion' %}
+                    <button type="button" class="btn-generar bg-rojo" disabled style="background-color: #bdc3c7 !important;">No Autorizado</button>
+                    {% else %}
+                    <a href="{{ url_for('documentos', tipo='Constancia de Retiro') }}" class="btn-generar bg-rojo" style="text-decoration: none; display: inline-block; width: 70%; text-align: center; line-height: 20px;">Generar</a>
+                    {% endif %}
                 </div>
 
                 <!-- 7. CONSTANCIA DE PROSECUCIÓN -->
-                <div class="tarjeta-documento borde-gris">
+                <div class="tarjeta-documento borde-gris" {% if session['rol'] == 'administracion' %}style="opacity: 0.6; position: relative;"{% endif %}>
+                    {% if session['rol'] == 'administracion' %}
+                    <div style="position: absolute; top: 10px; right: 10px; background-color: #e74c3c; color: white; padding: 3px 8px; border-radius: 10px; font-size: 10px; font-weight: bold;">Restringido</div>
+                    {% endif %}
                     <div class="documento-icono-area">
                         <div class="icono-doc-grafico doc-gris"></div>
                     </div>
                     <h3>7. Constancia de Prosecución</h3>
                     <p>Garantía de continuidad de estudios en la institución para el próximo período lectivo.</p>
-                    <button type="button" class="btn-generar bg-gris">Generar</button>
+                    {% if session['rol'] == 'administracion' %}
+                    <button type="button" class="btn-generar bg-gris" disabled style="background-color: #bdc3c7 !important;">No Autorizado</button>
+                    {% else %}
+                    <a href="{{ url_for('documentos', tipo='Constancia de Prosecución') }}" class="btn-generar bg-gris" style="text-decoration: none; display: inline-block; width: 70%; text-align: center; line-height: 20px;">Generar</a>
+                    {% endif %}
                 </div>
 
                 <!-- 8. CONSTANCIA DE INSCRIPCIÓN -->
@@ -179,12 +237,9 @@
                     </div>
                     <h3>8. Constancia de Inscripción</h3>
                     <p>Comprobante de validación del estudiante dentro del período de matrícula activo.</p>
-                    <button type="button" class="btn-generar bg-azul">Generar</button>
+                    <a href="{{ url_for('documentos', tipo='Constancia de Inscripción') }}" class="btn-generar bg-azul" style="text-decoration: none; display: inline-block; width: 70%; text-align: center; line-height: 20px;">Generar</a>
                 </div>
 
-            </div>
-        </main>
-    </div>
             </div>
         </main>
     </div>
@@ -196,13 +251,11 @@
             var barra = document.getElementById("barra-progreso");
             var texto = document.getElementById("texto-progreso");
             
-            // Mostramos la zona de carga
             zonaProgreso.style.display = "block";
             barra.style.width = "0%";
             texto.innerText = "Conectando con almacenamiento: 0%";
             
             var porcentaje = 0;
-            // Un temporizador que aumenta el progreso progresivamente
             var intervalo = setInterval(function() {
                 porcentaje += 10;
                 barra.style.width = porcentaje + "%";
@@ -214,13 +267,9 @@
                     texto.style.color = "#27ae60";
                     alert("Se ha cambiado el logo institucional en las plantillas de forma correcta.");
                 }
-            }, 150); // Velocidad de la animación
+            }, 150);
         }
     </script>
 
 </body>
 </html>
-
-</body>
-</html>
-

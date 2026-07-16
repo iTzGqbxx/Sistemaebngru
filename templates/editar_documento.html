@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema Escolar - Modificar Documento</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+
+    <header>
+        <h1>Control de Estudios - E.B.N. General Rafael Urdaneta</h1>
+        <nav>
+            <a href="{{ url_for('dashboard') }}" style="margin-right: 15px;">Inicio</a>
+            <a href="{{ url_for('ver_datos') }}" style="margin-right: 15px;">Ver Registros</a>
+            <a href="{{ url_for('logout') }}">Cerrar Sesión</a>
+        </nav>
+    </header>
+    <hr>
+
+    <main>
+        <h2>Módulo de Modificación de Documentos</h2>
+        <p>Actualice los datos correspondientes para corregir o cambiar el documento registrado.</p>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }}" style="color: #c0392b; background-color: #fdede9; padding: 10px; border-radius: 6px; margin-bottom: 20px; font-size: 13px; font-weight: bold; border: 1px solid #e74c3c; text-align: center;">
+                ⚠️ {{ message }}
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <form action="{{ url_for('editar_documento', id=doc.id) }}" method="POST">
+            <fieldset>
+                <legend><strong>Modificar Datos del Documento (ID: {{ doc.id }})</strong></legend>
+                <br>
+                <label for="tipo_documento">Tipo de Documento:</label>
+                <select id="tipo_documento" name="tipo_documento" required>
+                    <option value="">-- Seleccione --</option>
+                    {% if allowed_types %}
+                        {# Solo mostrar tipos permitidos para el rol de administración #}
+                        {% for type in allowed_types %}
+                            <option value="{{ type }}" {% if doc.tipo_documento == type %}selected{% endif %}>{{ type }}</option>
+                        {% endfor %}
+                    {% else %}
+                        {# Mostrar todos los tipos para Directora y Desarrollador #}
+                        <option value="Planilla de Inscripción" {% if doc.tipo_documento == 'Planilla de Inscripción' %}selected{% endif %}>Planilla de Inscripción</option>
+                        <option value="Constancia de Estudio" {% if doc.tipo_documento == 'Constancia de Estudio' %}selected{% endif %}>Constancia de Estudio</option>
+                        <option value="Constancia de Cupo" {% if doc.tipo_documento == 'Constancia de Cupo' %}selected{% endif %}>Constancia de Cupo</option>
+                        <option value="Certificación de Promoción" {% if doc.tipo_documento == 'Certificación de Promoción' %}selected{% endif %}>Certificación de Promoción</option>
+                        <option value="Constancia de Comportamiento" {% if doc.tipo_documento == 'Constancia de Comportamiento' %}selected{% endif %}>Constancia de Comportamiento</option>
+                        <option value="Constancia de Retiro" {% if doc.tipo_documento == 'Constancia de Retiro' %}selected{% endif %}>Constancia de Retiro</option>
+                        <option value="Constancia de Prosecución" {% if doc.tipo_documento == 'Constancia de Prosecución' %}selected{% endif %}>Constancia de Prosecución</option>
+                        <option value="Constancia de Inscripción" {% if doc.tipo_documento == 'Constancia de Inscripción' %}selected{% endif %}>Constancia de Inscripción</option>
+                    {% endif %}
+                </select>
+                <br><br>
+
+                <label for="nombre">Nombre del Estudiante:</label><br>
+                <input type="text" id="nombre" name="nombre" value="{{ doc.nombre }}" required><br><br>
+
+                <label for="apellido">Apellido del Estudiante:</label><br>
+                <input type="text" id="apellido" name="apellido" value="{{ doc.apellido }}" required><br><br>
+
+                <label for="cedula">Cédula de Identidad del Estudiante <small>(Sin prefijo V-, Ej: 31123456)</small>:</label><br>
+                <input type="text" id="cedula" name="cedula" value="{{ doc.cedula.replace('V-', '') }}" placeholder="Ej: 31123456" required><br><br>
+
+                <label for="ano_cursado">Año/Grado Cursado:</label><br>
+                <select id="ano_cursado" name="ano_cursado" required>
+                    <option value="">-- Seleccione --</option>
+                    <option value="1er Grado" {% if doc.ano_cursado == '1er Grado' %}selected{% endif %}>1er Grado</option>
+                    <option value="2do Grado" {% if doc.ano_cursado == '2do Grado' %}selected{% endif %}>2do Grado</option>
+                    <option value="3er Grado" {% if doc.ano_cursado == '3er Grado' %}selected{% endif %}>3er Grado</option>
+                    <option value="4to Grado" {% if doc.ano_cursado == '4to Grado' %}selected{% endif %}>4to Grado</option>
+                    <option value="5to Grado" {% if doc.ano_cursado == '5to Grado' %}selected{% endif %}>5to Grado</option>
+                    <option value="6to Grado" {% if doc.ano_cursado == '6to Grado' %}selected{% endif %}>6to Grado</option>
+                </select>
+                <br><br>
+
+                <label for="literal">Literal de Calificación / Sección (Opcional):</label><br>
+                <input type="text" id="literal" name="literal" value="{{ doc.literal or '' }}" placeholder="Ej: A, B, Excelente, etc."><br><br>
+            </fieldset>
+            <br>
+
+            <div style="text-align: center; display: flex; gap: 15px; justify-content: center;">
+                <button type="submit" style="padding: 10px 20px; font-size: 16px; background-color: #27ae60; width: auto;">Guardar Cambios</button>
+                <a href="{{ url_for('ver_datos') }}" style="padding: 10px 20px; font-size: 16px; background-color: #7f8c8d; color: white; text-decoration: none; border-radius: 4px; font-weight: bold; line-height: 20px;">Cancelar</a>
+            </div>
+        </form>
+    </main>
+    <br>
+
+    <footer>
+        <p style="text-align: center;">© 2026 Prototipo de Sistema de Matrícula - E.B.N. General Rafael Urdaneta</p>
+    </footer>
+
+</body>
+</html>

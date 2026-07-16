@@ -46,6 +46,72 @@
             border: 1px dashed #cccccc;
             border-radius: 4px;
         }
+        /* Estilos para la barra de búsqueda y filtros compactos */
+        .tabla-cabecera {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 25px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .tabla-cabecera .tabla-titulo {
+            margin-top: 0;
+            margin-bottom: 0;
+        }
+        .buscador-form {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .buscador-form input[type="text"] {
+            padding: 8px 12px;
+            border: 1px solid #cccccc;
+            border-radius: 4px;
+            width: 280px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        .buscador-form select {
+            padding: 8px 12px;
+            border: 1px solid #cccccc;
+            border-radius: 4px;
+            font-size: 14px;
+            background-color: #ffffff;
+            cursor: pointer;
+            box-sizing: border-box;
+        }
+        .btn-buscar {
+            background-color: #1a4a75;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+        .btn-buscar:hover {
+            background-color: #123452;
+        }
+        .btn-limpiar {
+            background-color: #f0f0f0;
+            color: #333;
+            border: 1px solid #cccccc;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: bold;
+            transition: background-color 0.2s;
+            display: inline-block;
+        }
+        .btn-limpiar:hover {
+            background-color: #e0e0e0;
+        }
     </style>
 </head>
 <body>
@@ -62,8 +128,56 @@
     <main>
         <h2>Registros del Sistema</h2>
         <p>A continuación se muestran los datos registrados de estudiantes inscritos y documentos generados en la base de datos.</p>
+        
+        <p style="font-size: 13px; color: #555; background-color: #f0f4f8; padding: 10px; border-radius: 5px; border-left: 4px solid #1a4a75;">
+            <strong>Rol de Usuario:</strong> 
+            {% if session['rol'] == 'desarrollador' %}
+                Desarrollador (Acceso Total y Borrado en BD)
+            {% elif session['rol'] == 'directora' %}
+                Directora GRU (Inscripción, Documentación y Eliminación de Documentos)
+            {% else %}
+                Administración GRU (Inscripción y Lectura de Registros)
+            {% endif %}
+        </p>
 
-        <h3 class="tabla-titulo">Estudiantes Inscritos</h3>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }}" style="color: {% if category=='error' %}#c0392b{% else %}#27ae60{% endif %}; background-color: {% if category=='error' %}#fdede9{% else %}#ebf7ee{% endif %}; padding: 12px; border-radius: 6px; margin-bottom: 20px; font-size: 13px; font-weight: bold; border: 1px solid {% if category=='error' %}#e74c3c{% else %}#2ecc71{% endif %}; text-align: center;">
+                {{ message }}
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <div class="tabla-cabecera">
+            <h3 class="tabla-titulo">Estudiantes Inscritos</h3>
+            <form class="buscador-form" method="GET" action="{{ url_for('ver_datos') }}">
+                <input type="text" name="q" placeholder="Buscar por nombre, apellido o cédula..." value="{{ search_query or '' }}">
+                
+                <select name="grado">
+                    <option value="">Todos los Grados</option>
+                    <option value="1" {% if grado_filter == '1' %}selected{% endif %}>1er Grado</option>
+                    <option value="2" {% if grado_filter == '2' %}selected{% endif %}>2do Grado</option>
+                    <option value="3" {% if grado_filter == '3' %}selected{% endif %}>3er Grado</option>
+                    <option value="4" {% if grado_filter == '4' %}selected{% endif %}>4to Grado</option>
+                    <option value="5" {% if grado_filter == '5' %}selected{% endif %}>5to Grado</option>
+                </select>
+
+                <select name="seccion">
+                    <option value="">Todas las Secciones</option>
+                    <option value="A" {% if seccion_filter == 'A' %}selected{% endif %}>Sección A</option>
+                    <option value="B" {% if seccion_filter == 'B' %}selected{% endif %}>Sección B</option>
+                    <option value="C" {% if seccion_filter == 'C' %}selected{% endif %}>Sección C</option>
+                    <option value="D" {% if seccion_filter == 'D' %}selected{% endif %}>Sección D</option>
+                </select>
+
+                <button type="submit" class="btn-buscar">Buscar</button>
+                {% if search_query or grado_filter or seccion_filter %}
+                    <a href="{{ url_for('ver_datos') }}" class="btn-limpiar">Limpiar</a>
+                {% endif %}
+            </form>
+        </div>
         {% if inscripciones %}
         <div style="overflow-x: auto;">
             <table>
@@ -77,6 +191,9 @@
                         <th>Representante (Madre)</th>
                         <th>Cédula Madre</th>
                         <th>Representante (Padre)</th>
+                        {% if session['rol'] == 'desarrollador' %}
+                        <th>Acciones</th>
+                        {% endif %}
                     </tr>
                 </thead>
                 <tbody>
@@ -88,8 +205,13 @@
                         <td>{{ ins.apellido }}</td>
                         <td>{{ ins.ano_cursado }}</td>
                         <td>{{ ins.rep_nombre }}</td>
-                        <td>{{ ins.rep_correo }}</td> <!-- Guardamos la cédula de la madre en rep_correo para simplificar -->
-                        <td>{{ ins.rep_apellido }}</td> <!-- Guardamos el nombre del padre en rep_apellido para simplificar -->
+                        <td>{{ ins.rep_correo }}</td>
+                        <td>{{ ins.rep_apellido }}</td>
+                        {% if session['rol'] == 'desarrollador' %}
+                        <td>
+                            <a href="{{ url_for('eliminar_inscripcion', id=ins.id) }}" class="btn-eliminar" onclick="return confirm('¿Está seguro de eliminar permanentemente esta inscripción de estudiante? Esta acción modificará directamente la base de datos y no se puede deshacer.');" style="background-color: #e74c3c; color: white; padding: 5px 10px; border-radius: 4px; text-decoration: none; font-size: 12px; font-weight: bold; display: inline-block;">Eliminar</a>
+                        </td>
+                        {% endif %}
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -112,6 +234,7 @@
                         <th>Apellido</th>
                         <th>Grado/Año</th>
                         <th>Calificación / Literal</th>
+                        <th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -124,6 +247,19 @@
                         <td>{{ doc.apellido }}</td>
                         <td>{{ doc.ano_cursado }}</td>
                         <td>{{ doc.literal or 'N/A' }}</td>
+                        <td>
+                            {% set is_allowed_admin = doc.tipo_documento in ['Planilla de Inscripción', 'Constancia de Estudio', 'Constancia de Cupo', 'Constancia de Inscripción'] %}
+                            {% if session['rol'] in ['desarrollador', 'directora'] %}
+                                <a href="{{ url_for('editar_documento', id=doc.id) }}" style="background-color: #f39c12; color: white; padding: 5px 10px; border-radius: 4px; text-decoration: none; font-size: 12px; font-weight: bold; margin-right: 5px; display: inline-block;">Editar</a>
+                                <a href="{{ url_for('eliminar_documento', id=doc.id) }}" onclick="return confirm('¿Está seguro de eliminar este documento de la base de datos?');" style="background-color: #e74c3c; color: white; padding: 5px 10px; border-radius: 4px; text-decoration: none; font-size: 12px; font-weight: bold; display: inline-block;">Eliminar</a>
+                            {% elif session['rol'] == 'administracion' %}
+                                {% if is_allowed_admin %}
+                                    <a href="{{ url_for('editar_documento', id=doc.id) }}" style="background-color: #f39c12; color: white; padding: 5px 10px; border-radius: 4px; text-decoration: none; font-size: 12px; font-weight: bold; display: inline-block;">Editar</a>
+                                {% else %}
+                                    <span style="color: #95a5a6; font-size: 12px; font-style: italic;">Sin Permiso de Edición</span>
+                                {% endif %}
+                            {% endif %}
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>

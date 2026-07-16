@@ -21,6 +21,13 @@
         <h2>Módulo de Inscripción y Matrícula</h2>
         <p>Complete todos los campos del estudiante, representantes y adjunte los requisitos legales exigidos.</p>
 
+        {% if session['rol'] in ['directora', 'administracion'] %}
+        <div class="cautela-banner" style="background-color: #fff9e6; border-left: 6px solid #f39c12; color: #7f8c8d; padding: 15px; border-radius: 6px; margin-bottom: 20px; font-size: 13px;">
+            <h4 style="margin: 0 0 5px 0; color: #d35400; font-weight: bold; font-size: 14px;">⚠️ Advertencia de Cautela (Validación de Datos)</h4>
+            <p style="margin: 0;">Estimado(a) <strong>{{ 'Directora' if session['rol'] == 'directora' else 'Personal de Administración' }}</strong>, recuerde que debe verificar y validar meticulosamente la documentación física original (Cédulas y Partida de Nacimiento) del estudiante antes de guardar el registro en la base de datos de matrícula.</p>
+        </div>
+        {% endif %}
+
         {% with messages = get_flashed_messages(with_categories=true) %}
           {% if messages %}
             {% for category, message in messages %}

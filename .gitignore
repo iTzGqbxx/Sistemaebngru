@@ -6,4 +6,3 @@ venv/
 .vscode/
 instance/
 *.db-journal
-escuela.db
