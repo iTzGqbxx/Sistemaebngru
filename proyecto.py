@@ -1,47 +1,42 @@
-
-import sqlite3
+import mysql.connector
+from mysql.connector import Error
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 
 app = Flask(__name__)
 app.secret_key = 'EBNGRU_secret_key_super_secure'
 
-DB_NAME = 'escuela.db'
+class DatabaseConnection:
+    _instance = None
 
-def init_db():
-    conn = sqlite3.connect(DB_NAME)
-    c = conn.cursor()
-    # Tabla para documentos ("Registro de Planilla" y "Registro de completación")
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS documentos (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            tipo_documento TEXT NOT NULL,
-            nombre TEXT NOT NULL,
-            apellido TEXT NOT NULL,
-            ano_cursado TEXT NOT NULL,
-            cedula TEXT NOT NULL,
-            literal TEXT
-        )
-    ''')
-    
-    # Tabla para inscripciones de estudiantes
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS inscripciones (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            nombre TEXT NOT NULL,
-            apellido TEXT NOT NULL,
-            ano_cursado TEXT NOT NULL,
-            cedula TEXT NOT NULL,
-            rep_nombre TEXT NOT NULL,
-            rep_apellido TEXT NOT NULL,
-            rep_correo TEXT NOT NULL,
-            rep_telefono TEXT NOT NULL
-        )
-    ''')
-    conn.commit()
-    conn.close()
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super(DatabaseConnection, cls).__new__(cls)
+            cls._instance._initialize_connection()
+        return cls._instance
 
-# Initialize DB on startup
-init_db()
+    def _initialize_connection(self):
+        try:
+            self.connection = mysql.connector.connect(
+                user="root",
+                password="",
+                host="localhost",
+                database="escuela_db",
+                port="3306"
+            )
+        except Error as e:
+            print(f"Error al conectar a MySQL: {e}")
+            raise
+
+    def get_connection(self):
+        if not self.connection.is_connected():
+            self._initialize_connection()
+        return self.connection
+
+    def close_connection(self):
+        if self.connection.is_connected():
+            self.connection.close()
+
+db_connection = DatabaseConnection()
 
 @app.route('/')
 def index():
@@ -113,11 +108,11 @@ def documentos():
         cedula = 'V-' + request.form['cedula']
         literal = request.form.get('literal', None)
         
-        conn = sqlite3.connect(DB_NAME)
+        conn = db_connection.get_connection()
         c = conn.cursor()
         c.execute('''
             INSERT INTO documentos (tipo_documento, nombre, apellido, ano_cursado, cedula, literal)
-            VALUES (?, ?, ?, ?, ?, ?)
+            VALUES (%s, %s, %s, %s, %s, %s)
         ''', (tipo_documento, nombre, apellido, ano_cursado, cedula, literal))
         conn.commit()
         conn.close()
@@ -134,10 +129,9 @@ def editar_documento(id):
         
     rol = session.get('rol')
     
-    conn = sqlite3.connect(DB_NAME)
-    conn.row_factory = sqlite3.Row
-    c = conn.cursor()
-    c.execute('SELECT * FROM documentos WHERE id = ?', (id,))
+    conn = db_connection.get_connection()
+    c = conn.cursor(dictionary=True)
+    c.execute('SELECT * FROM documentos WHERE id = %s', (id,))
     doc = c.fetchone()
     conn.close()
     
@@ -174,12 +168,12 @@ def editar_documento(id):
             flash('Acceso denegado: No puede cambiar el documento a un tipo no autorizado.', 'error')
             return redirect(url_for('ver_datos'))
             
-        conn = sqlite3.connect(DB_NAME)
+        conn = db_connection.get_connection()
         c = conn.cursor()
         c.execute('''
             UPDATE documentos 
-            SET tipo_documento = ?, nombre = ?, apellido = ?, ano_cursado = ?, cedula = ?, literal = ?
-            WHERE id = ?
+            SET tipo_documento = %s, nombre = %s, apellido = %s, ano_cursado = %s, cedula = %s, literal = %s
+            WHERE id = %s
         ''', (tipo_documento, nombre, apellido, ano_cursado, cedula, literal, id))
         conn.commit()
         conn.close()
@@ -199,9 +193,9 @@ def eliminar_documento(id):
         flash('Acceso denegado: Solo la Directora o el Desarrollador pueden eliminar documentos.', 'error')
         return redirect(url_for('ver_datos'))
         
-    conn = sqlite3.connect(DB_NAME)
+    conn = db_connection.get_connection()
     c = conn.cursor()
-    c.execute('DELETE FROM documentos WHERE id = ?', (id,))
+    c.execute('DELETE FROM documentos WHERE id = %s', (id,))
     conn.commit()
     conn.close()
     
@@ -218,9 +212,9 @@ def eliminar_inscripcion(id):
         flash('Acceso denegado: Únicamente el Desarrollador puede eliminar inscripciones.', 'error')
         return redirect(url_for('ver_datos'))
         
-    conn = sqlite3.connect(DB_NAME)
+    conn = db_connection.get_connection()
     c = conn.cursor()
-    c.execute('DELETE FROM inscripciones WHERE id = ?', (id,))
+    c.execute('DELETE FROM inscripciones WHERE id = %s', (id,))
     conn.commit()
     conn.close()
     
@@ -254,12 +248,12 @@ def inscripcion():
         rep_correo = request.form['cedula_madre']
         rep_telefono = request.form.get('cedula_padre', 'No registrado')
         
-        conn = sqlite3.connect(DB_NAME)
+        conn = db_connection.get_connection()
         c = conn.cursor()
         c.execute('''
             INSERT INTO inscripciones 
             (nombre, apellido, ano_cursado, cedula, rep_nombre, rep_apellido, rep_correo, rep_telefono)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
         ''', (nombres_est, apellidos_est, ano_cursado, cedula, rep_nombre, rep_apellido, rep_correo, rep_telefono))
         conn.commit()
         conn.close()
@@ -278,16 +272,15 @@ def ver_datos():
     grado_filter = request.args.get('grado', '')
     seccion_filter = request.args.get('seccion', '')
     
-    conn = sqlite3.connect(DB_NAME)
-    conn.row_factory = sqlite3.Row
-    c = conn.cursor()
+    conn = db_connection.get_connection()
+    c = conn.cursor(dictionary=True)
     
     # Construcción de consulta para inscripciones
     query_ins = 'SELECT * FROM inscripciones WHERE 1=1'
     params_ins = []
     
     if search_query:
-        query_ins += ' AND (nombre LIKE ? OR apellido LIKE ? OR cedula LIKE ?)'
+        query_ins += ' AND (nombre LIKE %s OR apellido LIKE %s OR cedula LIKE %s)'
         search_param = f'%{search_query}%'
         params_ins.extend([search_param, search_param, search_param])
         
@@ -307,7 +300,7 @@ def ver_datos():
     params_doc = []
     
     if search_query:
-        query_doc += ' AND (nombre LIKE ? OR apellido LIKE ? OR cedula LIKE ?)'
+        query_doc += ' AND (nombre LIKE %s OR apellido LIKE %s OR cedula LIKE %s)'
         search_param = f'%{search_query}%'
         params_doc.extend([search_param, search_param, search_param])
         
