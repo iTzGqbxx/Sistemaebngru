@@ -124,14 +124,38 @@ footer {
 }
 
 .btn-menu-hamburguesa {
-    background: none;
-    border: none;
-    color: white;
-    font-size: 24px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1.5px solid rgba(255, 255, 255, 0.25);
+    border-radius: 6px;
+    width: 38px;
+    height: 38px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 4px;
     cursor: pointer;
     padding: 0;
-    margin-right: 15px;
-    display: inline-block;
+    margin: 0;
+    flex-shrink: 0;
+    transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.1s ease;
+}
+
+.btn-menu-hamburguesa:hover {
+    background-color: rgba(255, 255, 255, 0.18);
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+.btn-menu-hamburguesa:active {
+    transform: scale(0.94);
+}
+
+.btn-menu-hamburguesa span {
+    display: block;
+    width: 20px;
+    height: 2.5px;
+    background-color: #ffffff;
+    border-radius: 2px;
 }
 
 .barra-lateral {
@@ -200,7 +224,7 @@ input[readonly] {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 12px 25px;
+    padding: 0 25px;
     position: fixed;
     top: 0;
     left: 0;
@@ -217,41 +241,80 @@ input[readonly] {
     gap: 15px;
 }
 
-.escudo-placeholder {
-    width: 40px;
-    height: 40px;
-    border: 2px solid white;
-    border-radius: 5px;
+.texto-colegio {
     display: flex;
-    align-items: center;
+    flex-direction: column;
     justify-content: center;
-    font-weight: bold;
-    font-size: 14px;
 }
 
-.info-colegio h1 {
-    font-size: 18px;
+.texto-colegio h1 {
+    font-size: 17px;
     margin: 0;
     font-weight: 600;
+    line-height: 1.25;
+    color: #ffffff;
 }
 
-.info-colegio p {
+.texto-colegio p {
     font-size: 12px;
     margin: 2px 0 0 0;
+    line-height: 1.2;
     color: #cbdad5;
 }
 
 .usuario-logout {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 14px;
 }
 
-.avatar-placeholder {
-    width: 35px;
-    height: 35px;
-    background-color: #cccccc;
+/* Avatar con silueta según rol */
+.avatar-rol {
+    width: 38px;
+    height: 38px;
     border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    flex-shrink: 0;
+}
+
+.avatar-rol:hover {
+    transform: scale(1.05);
+}
+
+.avatar-rol .icono-silueta {
+    width: 24px;
+    height: 24px;
+}
+
+/* 1. Desarrollador: Silueta de color azul, como el de la página */
+.avatar-rol.avatar-desarrollador {
+    background-color: #e6f0fa;
+    border: 2px solid #3498db;
+}
+.avatar-rol.avatar-desarrollador .icono-silueta {
+    fill: #1a4a75; /* Azul institucional de la página */
+}
+
+/* 2. Directora: Silueta de rojo pastel */
+.avatar-rol.avatar-directora {
+    background-color: #fdf2f2;
+    border: 2px solid #f8b4b4;
+}
+.avatar-rol.avatar-directora .icono-silueta {
+    fill: #e57373; /* Rojo pastel */
+}
+
+/* 3. Administración: Silueta de Gris pastel */
+.avatar-rol.avatar-administracion {
+    background-color: #f2f4f7;
+    border: 2px solid #cfd8dc;
+}
+.avatar-rol.avatar-administracion .icono-silueta {
+    fill: #8898aa; /* Gris pastel */
 }
 
 .btn-logout {
