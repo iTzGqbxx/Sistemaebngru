@@ -1,6 +1,12 @@
+import sys
 import mysql.connector
 from mysql.connector import Error
 from flask import Flask, render_template, request, redirect, url_for, session, flash
+
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8')
+if hasattr(sys.stderr, 'reconfigure'):
+    sys.stderr.reconfigure(encoding='utf-8')
 
 app = Flask(__name__)
 app.secret_key = 'EBNGRU_secret_key_super_secure'
@@ -11,30 +17,42 @@ class DatabaseConnection:
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super(DatabaseConnection, cls).__new__(cls)
-            cls._instance._initialize_connection()
+            cls._instance.connection = None
         return cls._instance
 
-    def _initialize_connection(self):
-        try:
-            self.connection = mysql.connector.connect(
-                user="root",
-                password="",
-                host="localhost",
-                database="escuela_db",
-                port="3306"
-            )
-        except Error as e:
-            print(f"Error al conectar a MySQL: {e}")
-            raise
+    def _create_connection(self):
+        databases_to_try = ["escuela_ebngru", "escuela_db"]
+        last_error = None
+        for db_name in databases_to_try:
+            try:
+                cnx = mysql.connector.connect(
+                    user="root",
+                    password="",
+                    host="localhost",
+                    database=db_name,
+                    port="3306"
+                )
+                return cnx
+            except Error as e:
+                last_error = e
+                if getattr(e, 'errno', None) == 1049:
+                    continue
+                break
+        raise last_error
 
     def get_connection(self):
-        if not self.connection.is_connected():
-            self._initialize_connection()
-        return self.connection
+        try:
+            if self.connection is None or not self.connection.is_connected():
+                self.connection = self._create_connection()
+            return self.connection
+        except Exception:
+            self.connection = self._create_connection()
+            return self.connection
 
     def close_connection(self):
-        if self.connection.is_connected():
+        if hasattr(self, 'connection') and self.connection and self.connection.is_connected():
             self.connection.close()
+            self.connection = None
 
 db_connection = DatabaseConnection()
 
@@ -285,11 +303,11 @@ def ver_datos():
         params_ins.extend([search_param, search_param, search_param])
         
     if grado_filter:
-        query_ins += ' AND ano_cursado LIKE ?'
+        query_ins += ' AND ano_cursado LIKE %s'
         params_ins.append(f'%{grado_filter}%Grado%')
         
     if seccion_filter:
-        query_ins += ' AND ano_cursado LIKE ?'
+        query_ins += ' AND ano_cursado LIKE %s'
         params_ins.append(f'%Sección {seccion_filter}%')
         
     c.execute(query_ins, params_ins)
@@ -321,4 +339,20 @@ def ver_datos():
                            seccion_filter=seccion_filter)
     
 if __name__ == '__main__':
+    try:
+        test_conn = db_connection.get_connection()
+        print("[OK] Conexion con MySQL establecida correctamente.")
+    except Exception as e:
+        print("\n" + "=" * 65)
+        print(f"[ERROR] Error al conectar a MySQL: {e}")
+        print("Por favor, verifica lo siguiente:")
+        print("1. Abre el panel de XAMPP e inicia el servicio MySQL (Start).")
+        print("2. Asegurate de tener la base de datos 'escuela_ebngru' o 'escuela_db'.")
+        print("=" * 65)
+        try:
+            input("\nPresiona Enter para salir...")
+        except Exception:
+            pass
+        raise SystemExit(1)
+
     app.run(host='0.0.0.0', port=5000)
