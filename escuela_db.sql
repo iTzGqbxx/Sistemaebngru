@@ -86,6 +86,30 @@ ALTER TABLE `documentos`
 --
 ALTER TABLE `inscripciones`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `usuarios`
+--
+
+CREATE TABLE IF NOT EXISTS `usuarios` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `usuario` varchar(50) NOT NULL UNIQUE,
+  `password` varchar(255) NOT NULL,
+  `rol` varchar(50) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+
+--
+-- Volcado de datos para la tabla `usuarios`
+--
+
+INSERT INTO `usuarios` (`usuario`, `password`, `rol`) VALUES
+('desarrollador', 'developerGRU', 'desarrollador'),
+('directoraGRU', 'directoraEBNGRU', 'directora'),
+('administracionGRU', 'EBNGRU', 'administracion')
+ON DUPLICATE KEY UPDATE `password` = VALUES(`password`), `rol` = VALUES(`rol`);
+
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
