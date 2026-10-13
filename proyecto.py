@@ -305,7 +305,7 @@ def ver_datos():
         params_doc.extend([search_param, search_param, search_param])
         
     if grado_filter:
-        query_doc += ' AND ano_cursado LIKE ?'
+        query_doc += ' AND ano_cursado LIKE %s'
         params_doc.append(f'%{grado_filter}%') # En documentos el formato puede variar un poco, usamos genérico
         
     c.execute(query_doc, params_doc)
