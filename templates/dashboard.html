@@ -19,10 +19,13 @@
     <!-- ENCABEZADO SUPERIOR AZUL (Fijo) -->
     <header class="encabezado-sistema">
         <div class="info-colegio">
-            <div class="escudo-placeholder">SM</div>
-            <div>
-                <button class="btn-menu-hamburguesa" onclick="alternarBarraLateral()">☰</button>
-                <h1 style="display: inline-block; vertical-align: middle;">E.B.N. General Rafael Urdaneta</h1>
+            <button class="btn-menu-hamburguesa" onclick="alternarBarraLateral()" aria-label="Alternar menú lateral" title="Menú">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <div class="texto-colegio">
+                <h1>E.B.N. General Rafael Urdaneta</h1>
                 {% if session['rol'] == 'desarrollador' %}
                     <p>Bienvenido(a), Desarrollador ({{ session['usuario'] }})</p>
                 {% elif session['rol'] == 'directora' %}
@@ -33,7 +36,11 @@
             </div>
         </div>
         <div class="usuario-logout">
-            <div class="avatar-placeholder"></div>
+            <div class="avatar-rol avatar-{{ session.get('rol', 'administracion') }}" title="Rol: {{ session.get('rol', 'administracion')|capitalize }}">
+                <svg viewBox="0 0 24 24" class="icono-silueta" aria-hidden="true">
+                    <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
+                </svg>
+            </div>
             <a href="{{ url_for('logout') }}" class="btn-logout">Cerrar Sesión</a>
         </div>
     </header>
