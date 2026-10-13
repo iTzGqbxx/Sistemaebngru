@@ -68,17 +68,15 @@ def login():
         usuario = request.form['usuario']
         password = request.form['password']
         
-        if usuario == 'desarrollador' and password == 'developerGRU':
-            session['usuario'] = usuario
-            session['rol'] = 'desarrollador'
-            return redirect(url_for('dashboard'))
-        elif usuario == 'directoraGRU' and password == 'directoraEBNGRU':
-            session['usuario'] = usuario
-            session['rol'] = 'directora'
-            return redirect(url_for('dashboard'))
-        elif usuario == 'administracionGRU' and password == 'EBNGRU':
-            session['usuario'] = usuario
-            session['rol'] = 'administracion'
+        conn = db_connection.get_connection()
+        c = conn.cursor(dictionary=True)
+        c.execute('SELECT * FROM usuarios WHERE usuario = %s AND password = %s', (usuario, password))
+        usuario_db = c.fetchone()
+        conn.close()
+        
+        if usuario_db:
+            session['usuario'] = usuario_db['usuario']
+            session['rol'] = usuario_db['rol']
             return redirect(url_for('dashboard'))
         else:
             flash('Usuario o contraseña incorrectos.', 'error')
