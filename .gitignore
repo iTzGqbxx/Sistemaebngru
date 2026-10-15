@@ -10,4 +10,3 @@ instance/uploads/*
 !instance/uploads/.gitkeep
 *.db-journal
 escuela.db
-escuela_db.sql
