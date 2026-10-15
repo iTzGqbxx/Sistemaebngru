@@ -1,7 +1,12 @@
 import sys
+from pathlib import Path
+from uuid import uuid4
+
 import mysql.connector
 from mysql.connector import Error
-from flask import Flask, render_template, request, redirect, url_for, session, flash
+from flask import Flask, abort, render_template, request, redirect, url_for, session, flash, send_from_directory
+from werkzeug.utils import secure_filename
+from werkzeug.exceptions import RequestEntityTooLarge
 
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
@@ -10,6 +15,46 @@ if hasattr(sys.stderr, 'reconfigure'):
 
 app = Flask(__name__)
 app.secret_key = 'EBNGRU_secret_key_super_secure'
+app.config['MAX_CONTENT_LENGTH'] = 32 * 1024 * 1024
+UPLOAD_FOLDER = Path(app.instance_path) / 'uploads'
+
+ARCHIVOS_INSCRIPCION = {
+    'doc_partida_nacimiento': ('Partida de nacimiento del estudiante', {'.pdf', '.jpg', '.jpeg', '.png', '.webp'}),
+    'doc_cedula_estudiante': ('Copia de cédula del estudiante', {'.pdf', '.jpg', '.jpeg', '.png', '.webp'}),
+    'doc_carton_vacunas': ('Copia de cartón de vacunas', {'.pdf', '.jpg', '.jpeg', '.png', '.webp'}),
+    'doc_cedula_representante': ('Copia de cédula del representante', {'.pdf', '.jpg', '.jpeg', '.png', '.webp'}),
+    'doc_rif_representante': ('Copia del RIF actualizado', {'.pdf', '.jpg', '.jpeg', '.png', '.webp'}),
+    'foto_estudiante': ('Foto tipo carnet del estudiante', {'.jpg', '.jpeg', '.png', '.webp'}),
+    'foto_representante': ('Foto tipo carnet del representante', {'.jpg', '.jpeg', '.png', '.webp'}),
+}
+
+
+def asegurar_tabla_archivos(cursor):
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS archivos_inscripcion (
+            id INT NOT NULL AUTO_INCREMENT,
+            inscripcion_id INT NOT NULL,
+            tipo VARCHAR(100) NOT NULL,
+            nombre_archivo VARCHAR(255) NOT NULL,
+            nombre_original VARCHAR(255) NOT NULL,
+            extension VARCHAR(10) NOT NULL,
+            creado_en TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            INDEX idx_archivos_inscripcion (inscripcion_id),
+            CONSTRAINT fk_archivos_inscripcion
+                FOREIGN KEY (inscripcion_id) REFERENCES inscripciones(id)
+                ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci
+    ''')
+
+
+@app.errorhandler(RequestEntityTooLarge)
+def archivo_demasiado_grande(error):
+    if request.endpoint == 'inscripcion' and 'usuario' in session:
+        flash('Los archivos adjuntos superan el límite total de 32 MB.', 'error')
+        return redirect(url_for('inscripcion'))
+    return error
+
 
 class DatabaseConnection:
     _instance = None
@@ -95,98 +140,6 @@ def dashboard():
         return redirect(url_for('login'))
     return render_template('dashboard.html')
 
-@app.route('/documentos', methods=['GET', 'POST'])
-def documentos():
-    if 'usuario' not in session:
-        return redirect(url_for('login'))
-        
-    rol = session.get('rol')
-    
-    # Documentos permitidos para administración
-    documentos_permitidos_admin = [
-        'Planilla de Inscripción',
-        'Constancia de Estudio',
-        'Constancia de Cupo',
-        'Constancia de Inscripción'
-    ]
-        
-    if request.method == 'POST':
-        tipo_documento = request.form['tipo_documento']
-        
-        # Validar tipo de documento si es rol administracion
-        if rol == 'administracion' and tipo_documento not in documentos_permitidos_admin:
-            flash('Acceso denegado: No tiene permisos para registrar este tipo de documento.', 'error')
-            return redirect(url_for('dashboard'))
-            
-        nombre = request.form['nombre']
-        apellido = request.form['apellido']
-        ano_cursado = request.form['ano_cursado']
-        cedula = 'V-' + request.form['cedula']
-        literal = request.form.get('literal', None)
-        
-        conn = db_connection.get_connection()
-        c = conn.cursor()
-        c.execute('''
-            INSERT INTO documentos (tipo_documento, nombre, apellido, ano_cursado, cedula, literal)
-            VALUES (%s, %s, %s, %s, %s, %s)
-        ''', (tipo_documento, nombre, apellido, ano_cursado, cedula, literal))
-        conn.commit()
-        conn.close()
-        
-        flash('Documento registrado con éxito.', 'success')
-        return redirect(url_for('dashboard'))
-        
-    return render_template('documentos.html', allowed_types=documentos_permitidos_admin if rol == 'administracion' else None)
-
-@app.route('/editar_documento/<int:id>', methods=['GET', 'POST'])
-def editar_documento(id):
-    if 'usuario' not in session:
-        return redirect(url_for('login'))
-        
-    rol = session.get('rol')
-    if rol == 'administracion':
-        flash('Acceso denegado: El personal de administración solo tiene permisos para registrar, no para modificar.', 'error')
-        return redirect(url_for('ver_datos'))
-        
-    conn = db_connection.get_connection()
-    c = conn.cursor(dictionary=True)
-    c.execute('SELECT * FROM documentos WHERE id = %s', (id,))
-    doc = c.fetchone()
-    conn.close()
-    
-    if not doc:
-        flash('Documento no encontrado.', 'error')
-        return redirect(url_for('ver_datos'))
-        
-    if request.method == 'POST':
-        tipo_documento = request.form['tipo_documento']
-        nombre = request.form['nombre']
-        apellido = request.form['apellido']
-        ano_cursado = request.form['ano_cursado']
-        
-        cedula_input = request.form['cedula']
-        if not cedula_input.startswith('V-'):
-            cedula = 'V-' + cedula_input
-        else:
-            cedula = cedula_input
-            
-        literal = request.form.get('literal', None)
-        
-        conn = db_connection.get_connection()
-        c = conn.cursor()
-        c.execute('''
-            UPDATE documentos 
-            SET tipo_documento = %s, nombre = %s, apellido = %s, ano_cursado = %s, cedula = %s, literal = %s
-            WHERE id = %s
-        ''', (tipo_documento, nombre, apellido, ano_cursado, cedula, literal, id))
-        conn.commit()
-        conn.close()
-        
-        flash('Documento modificado con éxito.', 'success')
-        return redirect(url_for('ver_datos'))
-        
-    return render_template('editar_documento.html', doc=doc)
-
 @app.route('/editar_inscripcion/<int:id>', methods=['GET', 'POST'])
 def editar_inscripcion(id):
     if 'usuario' not in session:
@@ -233,24 +186,61 @@ def editar_inscripcion(id):
         
     return render_template('editar_inscripcion.html', ins=ins)
 
-@app.route('/eliminar_documento/<int:id>')
-def eliminar_documento(id):
+@app.route('/estudiante/<int:id>')
+def ficha_estudiante(id):
     if 'usuario' not in session:
         return redirect(url_for('login'))
-        
-    rol = session.get('rol')
-    if rol not in ['directora', 'desarrollador']:
-        flash('Acceso denegado: Solo la Directora o el Desarrollador pueden eliminar documentos.', 'error')
-        return redirect(url_for('ver_datos'))
-        
+
     conn = db_connection.get_connection()
-    c = conn.cursor()
-    c.execute('DELETE FROM documentos WHERE id = %s', (id,))
-    conn.commit()
+    c = conn.cursor(dictionary=True)
+    asegurar_tabla_archivos(c)
+    c.execute('SELECT * FROM inscripciones WHERE id = %s', (id,))
+    estudiante = c.fetchone()
+
+    if not estudiante:
+        conn.close()
+        flash('Inscripción no encontrada.', 'error')
+        return redirect(url_for('ver_datos'))
+
+    c.execute(
+        'SELECT * FROM archivos_inscripcion WHERE inscripcion_id = %s ORDER BY tipo, creado_en',
+        (id,)
+    )
+    archivos_estudiante = c.fetchall()
     conn.close()
-    
-    flash('Documento eliminado correctamente.', 'success')
-    return redirect(url_for('ver_datos'))
+
+    foto_estudiante = next(
+        (archivo for archivo in archivos_estudiante if archivo['tipo'] == 'Foto tipo carnet del estudiante'),
+        None
+    )
+    return render_template(
+        'ficha_estudiante.html',
+        estudiante=estudiante,
+        archivos=archivos_estudiante,
+        foto_estudiante=foto_estudiante
+    )
+
+@app.route('/archivo_inscripcion/<int:id>')
+def ver_archivo_inscripcion(id):
+    if 'usuario' not in session:
+        return redirect(url_for('login'))
+
+    conn = db_connection.get_connection()
+    c = conn.cursor(dictionary=True)
+    asegurar_tabla_archivos(c)
+    c.execute('SELECT nombre_archivo, nombre_original, extension FROM archivos_inscripcion WHERE id = %s', (id,))
+    archivo = c.fetchone()
+    conn.close()
+
+    if not archivo:
+        abort(404)
+
+    return send_from_directory(
+        UPLOAD_FOLDER,
+        archivo['nombre_archivo'],
+        as_attachment=archivo['extension'].lower() == '.pdf',
+        download_name=archivo['nombre_original']
+    )
 
 @app.route('/eliminar_inscripcion/<int:id>')
 def eliminar_inscripcion(id):
@@ -264,9 +254,19 @@ def eliminar_inscripcion(id):
         
     conn = db_connection.get_connection()
     c = conn.cursor()
+    asegurar_tabla_archivos(c)
+    c.execute('SELECT nombre_archivo FROM archivos_inscripcion WHERE inscripcion_id = %s', (id,))
+    archivos = c.fetchall()
     c.execute('DELETE FROM inscripciones WHERE id = %s', (id,))
     conn.commit()
     conn.close()
+
+    for archivo in archivos:
+        ruta_archivo = UPLOAD_FOLDER / archivo[0]
+        try:
+            ruta_archivo.unlink(missing_ok=True)
+        except OSError:
+            app.logger.exception('No se pudo eliminar el archivo adjunto %s', ruta_archivo)
     
     flash('Inscripción eliminada correctamente.', 'success')
     return redirect(url_for('ver_datos'))
@@ -277,6 +277,20 @@ def inscripcion():
         return redirect(url_for('login'))
         
     if request.method == 'POST':
+        archivos_subidos = []
+        for campo, (tipo, extensiones_permitidas) in ARCHIVOS_INSCRIPCION.items():
+            archivo = request.files.get(campo)
+            if not archivo or not archivo.filename:
+                continue
+
+            nombre_original = secure_filename(archivo.filename)
+            extension = Path(nombre_original).suffix.lower()
+            if not nombre_original or extension not in extensiones_permitidas:
+                flash(f'El archivo seleccionado para "{tipo}" tiene un formato no permitido.', 'error')
+                return redirect(url_for('inscripcion'))
+
+            archivos_subidos.append((archivo, tipo, nombre_original, extension))
+
         nombres_est = request.form['nombres_estudiante']
         apellidos_est = request.form['apellidos_estudiante']
         
@@ -298,15 +312,46 @@ def inscripcion():
         rep_correo = request.form['cedula_madre']
         rep_telefono = request.form.get('cedula_padre', 'No registrado')
         
-        conn = db_connection.get_connection()
-        c = conn.cursor()
-        c.execute('''
-            INSERT INTO inscripciones 
-            (nombre, apellido, ano_cursado, cedula, rep_nombre, rep_apellido, rep_correo, rep_telefono)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-        ''', (nombres_est, apellidos_est, ano_cursado, cedula, rep_nombre, rep_apellido, rep_correo, rep_telefono))
-        conn.commit()
-        conn.close()
+        rutas_guardadas = []
+        conn = None
+        try:
+            UPLOAD_FOLDER.mkdir(parents=True, exist_ok=True)
+            conn = db_connection.get_connection()
+            c = conn.cursor()
+            asegurar_tabla_archivos(c)
+            c.execute('''
+                INSERT INTO inscripciones
+                (nombre, apellido, ano_cursado, cedula, rep_nombre, rep_apellido, rep_correo, rep_telefono)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            ''', (nombres_est, apellidos_est, ano_cursado, cedula, rep_nombre, rep_apellido, rep_correo, rep_telefono))
+            inscripcion_id = c.lastrowid
+
+            for archivo, tipo, nombre_original, extension in archivos_subidos:
+                nombre_guardado = f'{uuid4().hex}{extension}'
+                ruta_archivo = UPLOAD_FOLDER / nombre_guardado
+                rutas_guardadas.append(ruta_archivo)
+                archivo.save(ruta_archivo)
+                c.execute('''
+                    INSERT INTO archivos_inscripcion
+                    (inscripcion_id, tipo, nombre_archivo, nombre_original, extension)
+                    VALUES (%s, %s, %s, %s, %s)
+                ''', (inscripcion_id, tipo, nombre_guardado, nombre_original, extension))
+
+            conn.commit()
+        except (OSError, Error):
+            if conn:
+                conn.rollback()
+            for ruta_archivo in rutas_guardadas:
+                try:
+                    ruta_archivo.unlink(missing_ok=True)
+                except OSError:
+                    app.logger.exception('No se pudo limpiar el archivo adjunto %s', ruta_archivo)
+            app.logger.exception('No se pudo guardar la inscripción y sus archivos adjuntos.')
+            flash('No se pudo guardar la inscripción o uno de sus archivos. Inténtelo nuevamente.', 'error')
+            return redirect(url_for('inscripcion'))
+        finally:
+            if conn:
+                conn.close()
         
         flash('Inscripción registrada con éxito.', 'success')
         return redirect(url_for('dashboard'))
@@ -342,29 +387,13 @@ def ver_datos():
         query_ins += ' AND ano_cursado LIKE %s'
         params_ins.append(f'%Sección {seccion_filter}%')
         
+    query_ins += ' ORDER BY ano_cursado, apellido, nombre'
     c.execute(query_ins, params_ins)
     inscripciones = c.fetchall()
-    
-    # Construcción de consulta para documentos
-    query_doc = 'SELECT * FROM documentos WHERE 1=1'
-    params_doc = []
-    
-    if search_query:
-        query_doc += ' AND (nombre LIKE %s OR apellido LIKE %s OR cedula LIKE %s)'
-        search_param = f'%{search_query}%'
-        params_doc.extend([search_param, search_param, search_param])
-        
-    if grado_filter:
-        query_doc += ' AND ano_cursado LIKE %s'
-        params_doc.append(f'%{grado_filter}%') # En documentos el formato puede variar un poco, usamos genérico
-        
-    c.execute(query_doc, params_doc)
-    documentos = c.fetchall()
     
     conn.close()
     
     return render_template('ver_datos.html', 
-                           documentos=documentos, 
                            inscripciones=inscripciones,
                            search_query=search_query,
                            grado_filter=grado_filter,

@@ -24,22 +24,6 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
--- Estructura de tabla para la tabla `documentos`
---
-
-CREATE TABLE `documentos` (
-  `id` int(11) NOT NULL,
-  `tipo_documento` text NOT NULL,
-  `nombre` text NOT NULL,
-  `apellido` text NOT NULL,
-  `ano_cursado` text NOT NULL,
-  `cedula` text NOT NULL,
-  `literal` text DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
-
--- --------------------------------------------------------
-
---
 -- Estructura de tabla para la tabla `inscripciones`
 --
 
@@ -60,12 +44,6 @@ CREATE TABLE `inscripciones` (
 --
 
 --
--- Indices de la tabla `documentos`
---
-ALTER TABLE `documentos`
-  ADD PRIMARY KEY (`id`);
-
---
 -- Indices de la tabla `inscripciones`
 --
 ALTER TABLE `inscripciones`
@@ -76,16 +54,30 @@ ALTER TABLE `inscripciones`
 --
 
 --
--- AUTO_INCREMENT de la tabla `documentos`
---
-ALTER TABLE `documentos`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
 -- AUTO_INCREMENT de la tabla `inscripciones`
 --
 ALTER TABLE `inscripciones`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- Archivos adjuntos de cada expediente de inscripción
+--
+
+CREATE TABLE IF NOT EXISTS `archivos_inscripcion` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `inscripcion_id` int(11) NOT NULL,
+  `tipo` varchar(100) NOT NULL,
+  `nombre_archivo` varchar(255) NOT NULL,
+  `nombre_original` varchar(255) NOT NULL,
+  `extension` varchar(10) NOT NULL,
+  `creado_en` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_archivos_inscripcion` (`inscripcion_id`),
+  CONSTRAINT `fk_archivos_inscripcion`
+    FOREIGN KEY (`inscripcion_id`) REFERENCES `inscripciones` (`id`)
+    ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+
 -- --------------------------------------------------------
 
 --
