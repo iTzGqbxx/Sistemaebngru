@@ -11,6 +11,8 @@
     <header>
         <h1>Control de Estudios - E.B.N. General Rafael Urdaneta</h1>
         <nav>
+            {% set fallback_url = url_for('dashboard') %}
+            {% include '_boton_atras.html' %}
             <a href="{{ url_for('dashboard') }}" style="margin-right: 15px;">Inicio</a>
             <a href="{{ url_for('logout') }}">Cerrar Sesión</a>
         </nav>
@@ -100,20 +102,38 @@
 
             <fieldset>
                 <legend><strong>4. Requisitos y Documentos Adjuntos</strong></legend>
-                <br>
-                <p>Suba los documentos digitalizados en formato PDF o imagen (PNG/JPG):</p>
+                <p class="ayuda-archivos">Adjunte los documentos en PDF o imagen (JPG, PNG o WEBP). Son opcionales, quedarán guardados en el expediente y el tamaño total no debe superar 32 MB.</p>
 
-                <label for="doc_partida"><strong>Partida de Nacimiento del Estudiante:</strong></label><br>
-                <input type="file" id="doc_partida" name="doc_partida" accept=".pdf, .png, .jpg, .jpeg"><br><br>
-
-                <label for="doc_cedula_madre"><strong>Cédula de Identidad de la Madre:</strong></label><br>
-                <input type="file" id="doc_cedula_madre" name="doc_cedula_madre" accept=".pdf, .png, .jpg, .jpeg"><br><br>
-
-                <label for="doc_cedula_padre"><strong>Cédula de Identidad del Padre:</strong></label><br>
-                <input type="file" id="doc_cedula_padre" name="doc_cedula_padre" accept=".pdf, .png, .jpg, .jpeg"><br><br>
-
-                <label for="doc_fotos"><strong>Fotos tipo Carnet del Estudiante:</strong></label><br>
-                <input type="file" id="doc_fotos" name="doc_fotos" accept="image/*"><br><br>
+                <div class="rejilla-archivos">
+                    <div class="campo-archivo">
+                        <label for="doc_partida_nacimiento">Partida de nacimiento del estudiante</label>
+                        <input type="file" id="doc_partida_nacimiento" name="doc_partida_nacimiento" accept=".pdf,.jpg,.jpeg,.png,.webp">
+                    </div>
+                    <div class="campo-archivo">
+                        <label for="doc_cedula_estudiante">Copia de cédula del estudiante (si tiene cédula propia)</label>
+                        <input type="file" id="doc_cedula_estudiante" name="doc_cedula_estudiante" accept=".pdf,.jpg,.jpeg,.png,.webp">
+                    </div>
+                    <div class="campo-archivo">
+                        <label for="doc_carton_vacunas">Copia de cartón de vacunas</label>
+                        <input type="file" id="doc_carton_vacunas" name="doc_carton_vacunas" accept=".pdf,.jpg,.jpeg,.png,.webp">
+                    </div>
+                    <div class="campo-archivo">
+                        <label for="doc_cedula_representante">Copia de cédula del representante</label>
+                        <input type="file" id="doc_cedula_representante" name="doc_cedula_representante" accept=".pdf,.jpg,.jpeg,.png,.webp">
+                    </div>
+                    <div class="campo-archivo">
+                        <label for="doc_rif_representante">Copia del RIF actualizado</label>
+                        <input type="file" id="doc_rif_representante" name="doc_rif_representante" accept=".pdf,.jpg,.jpeg,.png,.webp">
+                    </div>
+                    <div class="campo-archivo">
+                        <label for="foto_estudiante">Foto tipo carnet del estudiante</label>
+                        <input type="file" id="foto_estudiante" name="foto_estudiante" accept=".jpg,.jpeg,.png,.webp">
+                    </div>
+                    <div class="campo-archivo">
+                        <label for="foto_representante">Foto tipo carnet del representante</label>
+                        <input type="file" id="foto_representante" name="foto_representante" accept=".jpg,.jpeg,.png,.webp">
+                    </div>
+                </div>
             </fieldset>
             <br>
 

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,14 +13,17 @@
             sidebar.classList.toggle("escondido");
             mainContent.classList.toggle("expandido");
         }
+
     </script>
 </head>
+
 <body class="cuerpo-dashboard">
 
     <!-- ENCABEZADO SUPERIOR AZUL (Fijo) -->
     <header class="encabezado-sistema">
         <div class="info-colegio">
-            <button class="btn-menu-hamburguesa" onclick="alternarBarraLateral()" aria-label="Alternar menú lateral" title="Menú">
+            <button class="btn-menu-hamburguesa" onclick="alternarBarraLateral()" aria-label="Alternar menú lateral"
+                title="Menú">
                 <span></span>
                 <span></span>
                 <span></span>
@@ -27,18 +31,22 @@
             <div class="texto-colegio">
                 <h1>E.B.N. General Rafael Urdaneta</h1>
                 {% if session['rol'] == 'desarrollador' %}
-                    <p>Bienvenido(a), Desarrollador ({{ session['usuario'] }})</p>
+                <p>Bienvenido(a), Desarrollador ({{ session['usuario'] }})</p>
                 {% elif session['rol'] == 'directora' %}
-                    <p>Bienvenido(a), Directora ({{ session['usuario'] }})</p>
+                <p>Bienvenido(a), Directora ({{ session['usuario'] }})</p>
                 {% else %}
-                    <p>Bienvenido(a), Personal de Administración ({{ session['usuario'] }})</p>
+                <p>Bienvenido(a), Personal de Administración ({{ session['usuario'] }})</p>
                 {% endif %}
             </div>
         </div>
         <div class="usuario-logout">
-            <div class="avatar-rol avatar-{{ session.get('rol', 'administracion') }}" title="Rol: {{ session.get('rol', 'administracion')|capitalize }}">
+            {% set fallback_url = url_for('ver_datos') %}
+            {% include '_boton_atras.html' %}
+            <div class="avatar-rol avatar-{{ session.get('rol', 'administracion') }}"
+                title="Rol: {{ session.get('rol', 'administracion')|capitalize }}">
                 <svg viewBox="0 0 24 24" class="icono-silueta" aria-hidden="true">
-                    <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
+                    <path
+                        d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z" />
                 </svg>
             </div>
             <a href="{{ url_for('logout') }}" class="btn-logout">Cerrar Sesión</a>
@@ -47,74 +55,48 @@
 
     <!-- CONTENEDOR INTERNO DE LA INTERFAZ -->
     <div class="interfaz-contenedor">
-        
+
         <!-- BARRA LATERAL IZQUIERDA -->
         <aside class="barra-lateral escondido" id="sidebarMenu">
             <nav class="menu-navegacion">
                 <a href="{{ url_for('dashboard') }}" class="enlace-nav activo"> Inicio</a>
                 <a href="{{ url_for('inscripcion') }}" class="enlace-nav"> Inscripciones</a>
-                <a href="{{ url_for('documentos') }}" class="enlace-nav"> Documentos</a>
                 <a href="{{ url_for('ver_datos') }}" class="enlace-nav"> Ver Registros</a>
-                {% if session['rol'] == 'desarrollador' %}
-                    <a href="#config" class="enlace-nav"> Configuración</a>
-                {% endif %}
             </nav>
         </aside>
 
         <!-- ESPACIO DE TRABAJO PRINCIPAL (LADO DERECHO) -->
         <main class="espacio-trabajo expandido" id="contenidoPrincipal">
-            
-            <h2 class="titulo-seccion">SELECCIONAR DOCUMENTO A GENERAR</h2>
+
+            <h2 class="titulo-seccion">GESTIÓN DE ESTUDIANTES</h2>
 
             {% with messages = get_flashed_messages(with_categories=true) %}
-              {% if messages %}
-                {% for category, message in messages %}
-                  <div class="alert alert-{{ category }}" style="color: #27ae60; background-color: #ebf7ee; padding: 10px; border-radius: 6px; margin-bottom: 20px; font-size: 13px; font-weight: bold; border: 1px solid #2ecc71; text-align: center;">
-                     {{ message }}
-                  </div>
-                {% endfor %}
-              {% endif %}
+            {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }}"
+                style="color: #27ae60; background-color: #ebf7ee; padding: 10px; border-radius: 6px; margin-bottom: 20px; font-size: 13px; font-weight: bold; border: 1px solid #2ecc71; text-align: center;">
+                {{ message }}
+            </div>
+            {% endfor %}
+            {% endif %}
             {% endwith %}
 
-            <!-- BARRA DE BÚSQUEDA Y FILTROS -->
-            <div class="barra-herramientas-filtros">
-                <input type="text" placeholder="Buscar por Estudiante (Cédula/ID o Nombre)..." class="buscador-estudiante">
-                <select class="filtro-seleccion">
-                    <option>Todos los Estudiantes</option>
-                </select>
-                <select class="filtro-seleccion">
-                    <option>Filtros...</option>
-                </select>
-            </div>
-
             {% if session['rol'] == 'desarrollador' %}
-            <!-- ENTORNO DE EDICIÓN DE LOGOS (Simulado para evitar la ventana de WebCode) -->
-            <div class="tarjeta-config-logos" id="config">
-                <h5>Configuración del Sistema: Ajuste de Documentación</h5>
-                <p style="font-size: 12px; color: #666; margin-bottom: 10px;">Permite modificar los logos institucionales de los encabezados ministeriales.</p>
-                
-                <button type="button" class="btn-subir-simulado" onclick="simularCargaLogo()">
-                    Seleccionar Imagen de la Galería
-                </button>
-                
-                <div id="progreso-zona" style="display: none; margin-top: 12px;">
-                    <div style="font-size: 11px; color: #1a4a75; margin-bottom: 4px; font-weight: bold;" id="texto-progreso">Subiendo nuevo logo: 0%</div>
-                    <div style="width: 100%; background-color: #e0e0e0; height: 8px; border-radius: 4px; overflow: hidden;">
-                        <div id="barra-progreso" style="width: 0%; background-color: #5cd699; height: 100%; transition: width 0.2s;"></div>
-                    </div>
-                </div>
-            </div>
-
             <!-- PANEL DE CONTROL DE DESARROLLADOR -->
-            <div class="tarjeta-config-logos" style="border: 2px solid #3498db; background-color: #f7fafd; margin-bottom: 25px;">
-                <h5 style="color: #2980b9; font-weight: bold; margin-bottom: 5px;"> Panel de Desarrollador - Estado del Sistema</h5>
-                <p style="font-size: 12px; color: #444; margin-bottom: 12px;">Acceso administrativo total concedido al Desarrollador. Puede eliminar y modificar cualquier registro en SQLite.</p>
+            <div class="tarjeta-config-logos"
+                style="border: 2px solid #3498db; background-color: #f7fafd; margin-bottom: 25px;">
+                <h5 style="color: #2980b9; font-weight: bold; margin-bottom: 5px;"> Panel de Desarrollador - Estado del
+                    Sistema</h5>
+                <p style="font-size: 12px; color: #444; margin-bottom: 12px;">Acceso administrativo total concedido al
+                    Desarrollador. Puede eliminar y modificar registros en MySQL.</p>
                 <div style="display: flex; gap: 15px; flex-wrap: wrap;">
-                    <div style="background-color: #fff; padding: 10px; border-radius: 6px; flex: 1; border: 1px solid #cbd5e1; min-width: 120px;">
+                    <div
+                        style="background-color: #fff; padding: 10px; border-radius: 6px; flex: 1; border: 1px solid #cbd5e1; min-width: 120px;">
                         <div style="font-size: 11px; color: #7f8c8d;">Base de Datos</div>
-                        <div style="font-size: 13px; font-weight: bold; color: #27ae60;">SQLite Activa (escuela.db)</div>
+                        <div style="font-size: 13px; font-weight: bold; color: #27ae60;">MySQL activa</div>
                     </div>
-                    <div style="background-color: #fff; padding: 10px; border-radius: 6px; flex: 1; border: 1px solid #cbd5e1; min-width: 120px;">
+                    <div
+                        style="background-color: #fff; padding: 10px; border-radius: 6px; flex: 1; border: 1px solid #cbd5e1; min-width: 120px;">
                         <div style="font-size: 11px; color: #7f8c8d;">Permisos de Borrado</div>
                         <div style="font-size: 13px; font-weight: bold; color: #c0392b;">Habilitados (Full Delete)</div>
                     </div>
@@ -122,161 +104,56 @@
             </div>
             {% endif %}
 
-            <!-- CUADRÍCULA DE DOCUMENTOS (Hacia los lados) -->
-            <div class="cuadricula-documentos">
-
-                <!-- 1. PLANILLA DE INSCRIPCIÓN -->
-                <div class="tarjeta-documento borde-verde">
-                    <div class="documento-icono-area">
-                        <div class="icono-doc-grafico doc-verde"></div>
-                    </div>
-                    <h3>1. Planilla de Inscripción</h3>
-                    <p>Exporta la ficha completa con los datos acumulativos del estudiante y representantes.</p>
-                    <a href="{{ url_for('documentos', tipo='Planilla de Inscripción') }}" class="btn-generar bg-verde" style="text-decoration: none; display: inline-block; width: 70%; text-align: center; line-height: 20px;">Generar</a>
+            <section class="bienvenida-dashboard">
+                <div class="texto-bienvenida">
+                    <span class="etiqueta-bienvenida">Sistema de control escolar</span>
+                    <h3>Una gestión escolar más sencilla</h3>
+                    <p>Administra las inscripciones, consulta las fichas de los estudiantes y organiza sus archivos adjuntos desde un solo lugar.</p>
                 </div>
-
-                <!-- 2. CONSTANCIA DE ESTUDIO -->
-                <div class="tarjeta-documento borde-azul">
-                    <div class="documento-icono-area">
-                        <div class="icono-doc-grafico doc-azul"></div>
-                    </div>
-                    <h3>2. Constancia de Estudio</h3>
-                    <p class="nota-restriccion">Restricción: Bloqueada temporalmente hasta el inicio formal del año escolar.</p>
-                    <button type="button" class="btn-generar bg-azul" disabled>Generar</button>
+                <div class="ilustracion-bienvenida" aria-hidden="true">
+                    <svg viewBox="0 0 260 190" role="presentation">
+                        <circle cx="130" cy="94" r="82" fill="#dceaf5"/>
+                        <path d="M52 148h156v12H52z" fill="#1a4a75" opacity=".14"/>
+                        <path d="M75 74 130 44l55 30v70H75z" fill="#fff" stroke="#1a4a75" stroke-width="4" stroke-linejoin="round"/>
+                        <path d="M65 76 130 38l65 38" fill="none" stroke="#1a4a75" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M115 108h30v36h-30z" fill="#dceaf5" stroke="#1a4a75" stroke-width="4"/>
+                        <path d="M88 91h14v14H88zm70 0h14v14h-14z" fill="#ffcc00"/>
+                        <path d="M103 47h15V30h24v17" fill="#fff" stroke="#1a4a75" stroke-width="4" stroke-linejoin="round"/>
+                        <path d="M130 31v16" stroke="#e74c3c" stroke-width="4" stroke-linecap="round"/>
+                        <path d="M58 126h15v18H58zm129 0h15v18h-15z" fill="#ffcc00"/>
+                        <path d="M45 161h170" stroke="#1a4a75" stroke-width="5" stroke-linecap="round"/>
+                    </svg>
                 </div>
+            </section>
 
-                <!-- 3. CONSTANCIA DE CUPO -->
-                <div class="tarjeta-documento borde-gris">
-                    <div class="documento-icono-area">
-                        <div class="icono-doc-grafico doc-gris"></div>
-                    </div>
-                    <h3>3. Constancia de Cupo</h3>
-                    <p>Emisión numerada y correlativa automática.</p>
-                    <div class="campos-tarjeta">
-                        <input type="text" value="N° 2026-0042" readonly class="readonly-badge">
-                        <input type="text" id="emisor_cupo" placeholder="Nombre de quien emite">
-                    </div>
-                    <a href="{{ url_for('documentos', tipo='Constancia de Cupo') }}" class="btn-generar bg-gris" style="text-decoration: none; display: inline-block; width: 70%; text-align: center; line-height: 20px;">Generar</a>
-                </div>
+            <section class="accesos-dashboard" aria-label="Accesos principales">
+                <a href="{{ url_for('inscripcion') }}" class="tarjeta-acceso tarjeta-acceso-verde">
+                    <span class="icono-acceso" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+                    </span>
+                    <span class="contenido-acceso">
+                        <strong>Inscribir estudiante</strong>
+                        <span>Registrar una nueva matrícula</span>
+                    </span>
+                    <span class="flecha-acceso" aria-hidden="true">&rarr;</span>
+                </a>
 
-                <!-- 4. PROMOCIÓN DE 6TO GRADO -->
-                <div class="tarjeta-documento borde-azul" {% if session['rol'] == 'administracion' %}style="opacity: 0.6; position: relative;"{% endif %}>
-                    {% if session['rol'] == 'administracion' %}
-                    <div style="position: absolute; top: 10px; right: 10px; background-color: #e74c3c; color: white; padding: 3px 8px; border-radius: 10px; font-size: 10px; font-weight: bold;">Restringido</div>
-                    {% endif %}
-                    <div class="documento-icono-area">
-                        <div class="icono-doc-grafico doc-azul"></div>
-                    </div>
-                    <h3>4. Certificación de Promoción</h3>
-                    <p>Certificado oficial de culminación de la Educación Primaria (6to Grado).</p>
-                    {% if session['rol'] == 'administracion' %}
-                    <button type="button" class="btn-generar bg-azul" disabled style="background-color: #bdc3c7 !important;">No Autorizado</button>
-                    {% else %}
-                    <a href="{{ url_for('documentos', tipo='Certificación de Promoción') }}" class="btn-generar bg-azul" style="text-decoration: none; display: inline-block; width: 70%; text-align: center; line-height: 20px;">Generar</a>
-                    {% endif %}
-                </div>
+                <a href="{{ url_for('ver_datos') }}" class="tarjeta-acceso tarjeta-acceso-azul">
+                    <span class="icono-acceso" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="6.3"/><path d="m16 16 4.3 4.3"/></svg>
+                    </span>
+                    <span class="contenido-acceso">
+                        <strong>Estudiantes y fichas</strong>
+                        <span>Consultar los registros por grado y sección</span>
+                    </span>
+                    <span class="flecha-acceso" aria-hidden="true">&rarr;</span>
+                </a>
 
-                <!-- 5. CONSTANCIA DE COMPORTAMIENTO -->
-                <div class="tarjeta-documento borde-verde" {% if session['rol'] == 'administracion' %}style="opacity: 0.6; position: relative;"{% endif %}>
-                    {% if session['rol'] == 'administracion' %}
-                    <div style="position: absolute; top: 10px; right: 10px; background-color: #e74c3c; color: white; padding: 3px 8px; border-radius: 10px; font-size: 10px; font-weight: bold;">Restringido</div>
-                    {% endif %}
-                    <div class="documento-icono-area">
-                        <div class="icono-doc-grafico doc-verde"></div>
-                    </div>
-                    <h3>5. Constancia de Comportamiento</h3>
-                    <p>Apreciación de conducta general del estudiante.</p>
-                    <div class="campos-tarjeta">
-                        <select id="conducta" class="select-tarjeta" {% if session['rol'] == 'administracion' %}disabled{% endif %}>
-                            <option>Excelente</option>
-                            <option>Buena</option>
-                            <option>Regular</option>
-                        </select>
-                    </div>
-                    {% if session['rol'] == 'administracion' %}
-                    <button type="button" class="btn-generar bg-verde" disabled style="background-color: #bdc3c7 !important;">No Autorizado</button>
-                    {% else %}
-                    <a href="{{ url_for('documentos', tipo='Constancia de Comportamiento') }}" class="btn-generar bg-verde" style="text-decoration: none; display: inline-block; width: 70%; text-align: center; line-height: 20px;">Generar</a>
-                    {% endif %}
-                </div>
+            </section>
 
-                <!-- 6. CONSTANCIA DE RETIRO -->
-                <div class="tarjeta-documento borde-rojo" {% if session['rol'] == 'administracion' %}style="opacity: 0.6; position: relative;"{% endif %}>
-                    {% if session['rol'] == 'administracion' %}
-                    <div style="position: absolute; top: 10px; right: 10px; background-color: #e74c3c; color: white; padding: 3px 8px; border-radius: 10px; font-size: 10px; font-weight: bold;">Restringido</div>
-                    {% endif %}
-                    <div class="documento-icono-area">
-                        <div class="icono-doc-grafico doc-rojo"></div>
-                    </div>
-                    <h3>6. Constancia de Retiro</h3>
-                    <p>Procesamiento inmediato de desincorporación de la matrícula por mudanza u otros motivos.</p>
-                    <div class="campos-tarjeta">
-                        <input type="text" placeholder="Indique motivo del retiro" class="input-tarjeta" {% if session['rol'] == 'administracion' %}disabled{% endif %}>
-                    </div>
-                    {% if session['rol'] == 'administracion' %}
-                    <button type="button" class="btn-generar bg-rojo" disabled style="background-color: #bdc3c7 !important;">No Autorizado</button>
-                    {% else %}
-                    <a href="{{ url_for('documentos', tipo='Constancia de Retiro') }}" class="btn-generar bg-rojo" style="text-decoration: none; display: inline-block; width: 70%; text-align: center; line-height: 20px;">Generar</a>
-                    {% endif %}
-                </div>
-
-                <!-- 7. CONSTANCIA DE PROSECUCIÓN -->
-                <div class="tarjeta-documento borde-gris" {% if session['rol'] == 'administracion' %}style="opacity: 0.6; position: relative;"{% endif %}>
-                    {% if session['rol'] == 'administracion' %}
-                    <div style="position: absolute; top: 10px; right: 10px; background-color: #e74c3c; color: white; padding: 3px 8px; border-radius: 10px; font-size: 10px; font-weight: bold;">Restringido</div>
-                    {% endif %}
-                    <div class="documento-icono-area">
-                        <div class="icono-doc-grafico doc-gris"></div>
-                    </div>
-                    <h3>7. Constancia de Prosecución</h3>
-                    <p>Garantía de continuidad de estudios en la institución para el próximo período lectivo.</p>
-                    {% if session['rol'] == 'administracion' %}
-                    <button type="button" class="btn-generar bg-gris" disabled style="background-color: #bdc3c7 !important;">No Autorizado</button>
-                    {% else %}
-                    <a href="{{ url_for('documentos', tipo='Constancia de Prosecución') }}" class="btn-generar bg-gris" style="text-decoration: none; display: inline-block; width: 70%; text-align: center; line-height: 20px;">Generar</a>
-                    {% endif %}
-                </div>
-
-                <!-- 8. CONSTANCIA DE INSCRIPCIÓN -->
-                <div class="tarjeta-documento borde-azul">
-                    <div class="documento-icono-area">
-                        <div class="icono-doc-grafico doc-azul"></div>
-                    </div>
-                    <h3>8. Constancia de Inscripción</h3>
-                    <p>Comprobante de validación del estudiante dentro del período de matrícula activo.</p>
-                    <a href="{{ url_for('documentos', tipo='Constancia de Inscripción') }}" class="btn-generar bg-azul" style="text-decoration: none; display: inline-block; width: 70%; text-align: center; line-height: 20px;">Generar</a>
-                </div>
-
-            </div>
         </main>
     </div>
 
-    <!-- SCRIPT INTERACTIVO DEL PANEL -->
-    <script>
-        function simularCargaLogo() {
-            var zonaProgreso = document.getElementById("progreso-zona");
-            var barra = document.getElementById("barra-progreso");
-            var texto = document.getElementById("texto-progreso");
-            
-            zonaProgreso.style.display = "block";
-            barra.style.width = "0%";
-            texto.innerText = "Conectando con almacenamiento: 0%";
-            
-            var porcentaje = 0;
-            var intervalo = setInterval(function() {
-                porcentaje += 10;
-                barra.style.width = porcentaje + "%";
-                texto.innerText = "Subiendo nuevo logo institucional: " + porcentaje + "%";
-                
-                if (porcentaje >= 100) {
-                    clearInterval(intervalo);
-                    texto.innerText = "¡Logo actualizado con éxito en el sistema!";
-                    texto.style.color = "#27ae60";
-                    alert("Se ha cambiado el logo institucional en las plantillas de forma correcta.");
-                }
-            }, 150);
-        }
-    </script>
-
 </body>
+
 </html>

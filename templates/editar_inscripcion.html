@@ -11,6 +11,8 @@
     <header>
         <h1>Control de Estudios - E.B.N. General Rafael Urdaneta</h1>
         <nav>
+            {% set fallback_url = url_for('ver_datos') %}
+            {% include '_boton_atras.html' %}
             <a href="{{ url_for('dashboard') }}" style="margin-right: 15px;">Inicio</a>
             <a href="{{ url_for('ver_datos') }}" style="margin-right: 15px;">Ver Registros</a>
             <a href="{{ url_for('logout') }}">Cerrar Sesión</a>

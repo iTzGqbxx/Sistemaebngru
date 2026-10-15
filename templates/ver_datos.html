@@ -6,7 +6,7 @@
     <title>Sistema Escolar - Ver Registros</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     <style>
-        /* Estilos específicos para la visualización de tablas en la versión 1 */
+        /* Estilos de las tablas de registros */
         table {
             width: 100%;
             border-collapse: collapse;
@@ -137,6 +137,8 @@
     <header>
         <h1>Control de Estudios - E.B.N. General Rafael Urdaneta</h1>
         <nav>
+            {% set fallback_url = url_for('dashboard') %}
+            {% include '_boton_atras.html' %}
             <a href="{{ url_for('dashboard') }}" style="margin-right: 15px;">Inicio</a>
             <a href="{{ url_for('logout') }}">Cerrar Sesión</a>
         </nav>
@@ -145,14 +147,14 @@
 
     <main>
         <h2>Registros del Sistema</h2>
-        <p>A continuación se muestran los datos registrados de estudiantes inscritos y documentos generados en la base de datos.</p>
+        <p>A continuación se muestran los estudiantes inscritos, organizados por grado y sección.</p>
         
         <p style="font-size: 13px; color: #555; background-color: #f0f4f8; padding: 10px; border-radius: 5px; border-left: 4px solid #1a4a75;">
             <strong>Rol de Usuario:</strong> 
             {% if session['rol'] == 'desarrollador' %}
                 Desarrollador (Acceso Total y Borrado en BD)
             {% elif session['rol'] == 'directora' %}
-                Directora GRU (Inscripción, Documentación y Eliminación de Documentos)
+                Directora GRU (Inscripción y administración de expedientes)
             {% else %}
                 Administración GRU (Inscripción y Lectura de Registros)
             {% endif %}
@@ -197,91 +199,25 @@
             </form>
         </div>
         {% if inscripciones %}
-        <div style="overflow-x: auto;">
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Cédula</th>
-                        <th>Nombre</th>
-                        <th>Apellido</th>
-                        <th>Grado / Sección</th>
-                        <th>Representante (Madre)</th>
-                        <th>Cédula Madre</th>
-                        <th>Representante (Padre)</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for ins in inscripciones %}
-                    <tr>
-                        <td>{{ ins.id }}</td>
-                        <td>{{ ins.cedula }}</td>
-                        <td>{{ ins.nombre }}</td>
-                        <td>{{ ins.apellido }}</td>
-                        <td>{{ ins.ano_cursado }}</td>
-                        <td>{{ ins.rep_nombre }}</td>
-                        <td>{{ ins.rep_correo }}</td>
-                        <td>{{ ins.rep_apellido }}</td>
-                        <td>
-                            {% if session['rol'] in ['desarrollador', 'directora'] %}
-                                <a href="{{ url_for('editar_inscripcion', id=ins.id) }}" style="background-color: #f39c12; color: white; padding: 5px 10px; border-radius: 4px; text-decoration: none; font-size: 12px; font-weight: bold; margin-right: 5px; display: inline-block;">Editar</a>
-                                <a href="{{ url_for('eliminar_inscripcion', id=ins.id) }}" class="btn-eliminar" onclick="return confirm('¿Está seguro de eliminar permanentemente esta inscripción de estudiante? Esta acción modificará directamente la base de datos y no se puede deshacer.');" style="background-color: #e74c3c; color: white; padding: 5px 10px; border-radius: 4px; text-decoration: none; font-size: 12px; font-weight: bold; display: inline-block;">Eliminar</a>
-                            {% else %}
-                                <span style="color: #95a5a6; font-size: 12px; font-style: italic;">Sin Permiso de Edición</span>
-                            {% endif %}
-                        </td>
-                    </tr>
+        <div class="grupos-estudiantes">
+            {% for grupo in inscripciones|groupby('ano_cursado') %}
+            <section class="grupo-estudiantes" aria-label="{{ grupo.grouper }}">
+                <h4 class="grupo-titulo">{{ grupo.grouper }}</h4>
+                <div class="lista-estudiantes">
+                    {% for ins in grupo.list %}
+                    <a class="enlace-estudiante" href="{{ url_for('ficha_estudiante', id=ins.id) }}">
+                        <span>{{ ins.nombre }} {{ ins.apellido }}</span>
+                        <span class="indicador-ficha" aria-hidden="true">&rarr;</span>
+                    </a>
                     {% endfor %}
-                </tbody>
-            </table>
+                </div>
+            </section>
+            {% endfor %}
         </div>
         {% else %}
         <div class="sin-datos">No hay inscripciones registradas actualmente.</div>
         {% endif %}
 
-        <h3 class="tabla-titulo">Documentos Registrados</h3>
-        {% if documentos %}
-        <div style="overflow-x: auto;">
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Tipo de Documento</th>
-                        <th>Cédula</th>
-                        <th>Nombre</th>
-                        <th>Apellido</th>
-                        <th>Grado/Año</th>
-                        <th>Calificación / Literal</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for doc in documentos %}
-                    <tr>
-                        <td>{{ doc.id }}</td>
-                        <td>{{ doc.tipo_documento }}</td>
-                        <td>{{ doc.cedula }}</td>
-                        <td>{{ doc.nombre }}</td>
-                        <td>{{ doc.apellido }}</td>
-                        <td>{{ doc.ano_cursado }}</td>
-                        <td>{{ doc.literal or 'N/A' }}</td>
-                        <td>
-                            {% if session['rol'] in ['desarrollador', 'directora'] %}
-                                <a href="{{ url_for('editar_documento', id=doc.id) }}" style="background-color: #f39c12; color: white; padding: 5px 10px; border-radius: 4px; text-decoration: none; font-size: 12px; font-weight: bold; margin-right: 5px; display: inline-block;">Editar</a>
-                                <a href="{{ url_for('eliminar_documento', id=doc.id) }}" onclick="return confirm('¿Está seguro de eliminar este documento de la base de datos?');" style="background-color: #e74c3c; color: white; padding: 5px 10px; border-radius: 4px; text-decoration: none; font-size: 12px; font-weight: bold; display: inline-block;">Eliminar</a>
-                            {% else %}
-                                <span style="color: #95a5a6; font-size: 12px; font-style: italic;">Sin Permiso de Edición</span>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        {% else %}
-        <div class="sin-datos">No hay documentos registrados actualmente.</div>
-        {% endif %}
     </main>
     <hr>
 
