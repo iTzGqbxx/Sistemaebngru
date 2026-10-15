@@ -23,7 +23,7 @@
 
         {% if session['rol'] in ['directora', 'administracion'] %}
         <div class="cautela-banner" style="background-color: #fff9e6; border-left: 6px solid #f39c12; color: #7f8c8d; padding: 15px; border-radius: 6px; margin-bottom: 20px; font-size: 13px;">
-            <h4 style="margin: 0 0 5px 0; color: #d35400; font-weight: bold; font-size: 14px;">⚠️ Advertencia de Cautela (Validación de Datos)</h4>
+            <h4 style="margin: 0 0 5px 0; color: #d35400; font-weight: bold; font-size: 14px;"> Advertencia de Cautela (Validación de Datos)</h4>
             <p style="margin: 0;">Estimado(a) <strong>{{ 'Directora' if session['rol'] == 'directora' else 'Personal de Administración' }}</strong>, recuerde que debe verificar y validar meticulosamente la documentación física original (Cédulas y Partida de Nacimiento) del estudiante antes de guardar el registro en la base de datos de matrícula.</p>
         </div>
         {% endif %}
@@ -32,7 +32,7 @@
           {% if messages %}
             {% for category, message in messages %}
               <div class="alert alert-{{ category }}" style="color: #27ae60; background-color: #ebf7ee; padding: 10px; border-radius: 6px; margin-bottom: 20px; font-size: 13px; font-weight: bold; border: 1px solid #2ecc71; text-align: center;">
-                ✅ {{ message }}
+                 {{ message }}
               </div>
             {% endfor %}
           {% endif %}
@@ -126,7 +126,7 @@
     <hr>
 
     <footer>
-        <p style="text-align: center;">© 2026 Prototipo de Sistema de Matrícula - E.B.N. General Rafael Urdaneta</p>
+        <p style="text-align: center;"> 2026 Prototipo de Sistema de Matrícula - E.B.N. General Rafael Urdaneta</p>
     </footer>
 
 </body>

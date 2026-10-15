@@ -26,7 +26,7 @@
           {% if messages %}
             {% for category, message in messages %}
               <div class="alert alert-{{ category }}" style="color: #c0392b; background-color: #fdede9; padding: 10px; border-radius: 6px; margin-bottom: 20px; font-size: 13px; font-weight: bold; border: 1px solid #e74c3c; text-align: center;">
-                ⚠️ {{ message }}
+                 {{ message }}
               </div>
             {% endfor %}
           {% endif %}
@@ -39,22 +39,14 @@
                 <label for="tipo_documento">Tipo de Documento:</label>
                 <select id="tipo_documento" name="tipo_documento" required>
                     <option value="">-- Seleccione --</option>
-                    {% if allowed_types %}
-                        {# Solo mostrar tipos permitidos para el rol de administración #}
-                        {% for type in allowed_types %}
-                            <option value="{{ type }}" {% if doc.tipo_documento == type %}selected{% endif %}>{{ type }}</option>
-                        {% endfor %}
-                    {% else %}
-                        {# Mostrar todos los tipos para Directora y Desarrollador #}
-                        <option value="Planilla de Inscripción" {% if doc.tipo_documento == 'Planilla de Inscripción' %}selected{% endif %}>Planilla de Inscripción</option>
-                        <option value="Constancia de Estudio" {% if doc.tipo_documento == 'Constancia de Estudio' %}selected{% endif %}>Constancia de Estudio</option>
-                        <option value="Constancia de Cupo" {% if doc.tipo_documento == 'Constancia de Cupo' %}selected{% endif %}>Constancia de Cupo</option>
-                        <option value="Certificación de Promoción" {% if doc.tipo_documento == 'Certificación de Promoción' %}selected{% endif %}>Certificación de Promoción</option>
-                        <option value="Constancia de Comportamiento" {% if doc.tipo_documento == 'Constancia de Comportamiento' %}selected{% endif %}>Constancia de Comportamiento</option>
-                        <option value="Constancia de Retiro" {% if doc.tipo_documento == 'Constancia de Retiro' %}selected{% endif %}>Constancia de Retiro</option>
-                        <option value="Constancia de Prosecución" {% if doc.tipo_documento == 'Constancia de Prosecución' %}selected{% endif %}>Constancia de Prosecución</option>
-                        <option value="Constancia de Inscripción" {% if doc.tipo_documento == 'Constancia de Inscripción' %}selected{% endif %}>Constancia de Inscripción</option>
-                    {% endif %}
+                    <option value="Planilla de Inscripción" {% if doc.tipo_documento == 'Planilla de Inscripción' %}selected{% endif %}>Planilla de Inscripción</option>
+                    <option value="Constancia de Estudio" {% if doc.tipo_documento == 'Constancia de Estudio' %}selected{% endif %}>Constancia de Estudio</option>
+                    <option value="Constancia de Cupo" {% if doc.tipo_documento == 'Constancia de Cupo' %}selected{% endif %}>Constancia de Cupo</option>
+                    <option value="Certificación de Promoción" {% if doc.tipo_documento == 'Certificación de Promoción' %}selected{% endif %}>Certificación de Promoción</option>
+                    <option value="Constancia de Comportamiento" {% if doc.tipo_documento == 'Constancia de Comportamiento' %}selected{% endif %}>Constancia de Comportamiento</option>
+                    <option value="Constancia de Retiro" {% if doc.tipo_documento == 'Constancia de Retiro' %}selected{% endif %}>Constancia de Retiro</option>
+                    <option value="Constancia de Prosecución" {% if doc.tipo_documento == 'Constancia de Prosecución' %}selected{% endif %}>Constancia de Prosecución</option>
+                    <option value="Constancia de Inscripción" {% if doc.tipo_documento == 'Constancia de Inscripción' %}selected{% endif %}>Constancia de Inscripción</option>
                 </select>
                 <br><br>
 
@@ -93,7 +85,7 @@
     <br>
 
     <footer>
-        <p style="text-align: center;">© 2026 Prototipo de Sistema de Matrícula - E.B.N. General Rafael Urdaneta</p>
+        <p style="text-align: center;"> 2026 Prototipo de Sistema de Matrícula - E.B.N. General Rafael Urdaneta</p>
     </footer>
 
 </body>

@@ -112,6 +112,24 @@
         .btn-limpiar:hover {
             background-color: #e0e0e0;
         }
+        .alert {
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            font-weight: bold;
+            text-align: center;
+        }
+        .alert-error {
+            color: #c0392b;
+            background-color: #fdede9;
+            border: 1px solid #e74c3c;
+        }
+        .alert-success {
+            color: #27ae60;
+            background-color: #ebf7ee;
+            border: 1px solid #2ecc71;
+        }
     </style>
 </head>
 <body>
@@ -143,7 +161,7 @@
         {% with messages = get_flashed_messages(with_categories=true) %}
           {% if messages %}
             {% for category, message in messages %}
-              <div class="alert alert-{{ category }}" style="color: {% if category=='error' %}#c0392b{% else %}#27ae60{% endif %}; background-color: {% if category=='error' %}#fdede9{% else %}#ebf7ee{% endif %}; padding: 12px; border-radius: 6px; margin-bottom: 20px; font-size: 13px; font-weight: bold; border: 1px solid {% if category=='error' %}#e74c3c{% else %}#2ecc71{% endif %}; text-align: center;">
+              <div class="alert alert-{{ category }}">
                 {{ message }}
               </div>
             {% endfor %}
@@ -191,9 +209,7 @@
                         <th>Representante (Madre)</th>
                         <th>Cédula Madre</th>
                         <th>Representante (Padre)</th>
-                        {% if session['rol'] == 'desarrollador' %}
                         <th>Acciones</th>
-                        {% endif %}
                     </tr>
                 </thead>
                 <tbody>
@@ -207,11 +223,14 @@
                         <td>{{ ins.rep_nombre }}</td>
                         <td>{{ ins.rep_correo }}</td>
                         <td>{{ ins.rep_apellido }}</td>
-                        {% if session['rol'] == 'desarrollador' %}
                         <td>
-                            <a href="{{ url_for('eliminar_inscripcion', id=ins.id) }}" class="btn-eliminar" onclick="return confirm('¿Está seguro de eliminar permanentemente esta inscripción de estudiante? Esta acción modificará directamente la base de datos y no se puede deshacer.');" style="background-color: #e74c3c; color: white; padding: 5px 10px; border-radius: 4px; text-decoration: none; font-size: 12px; font-weight: bold; display: inline-block;">Eliminar</a>
+                            {% if session['rol'] in ['desarrollador', 'directora'] %}
+                                <a href="{{ url_for('editar_inscripcion', id=ins.id) }}" style="background-color: #f39c12; color: white; padding: 5px 10px; border-radius: 4px; text-decoration: none; font-size: 12px; font-weight: bold; margin-right: 5px; display: inline-block;">Editar</a>
+                                <a href="{{ url_for('eliminar_inscripcion', id=ins.id) }}" class="btn-eliminar" onclick="return confirm('¿Está seguro de eliminar permanentemente esta inscripción de estudiante? Esta acción modificará directamente la base de datos y no se puede deshacer.');" style="background-color: #e74c3c; color: white; padding: 5px 10px; border-radius: 4px; text-decoration: none; font-size: 12px; font-weight: bold; display: inline-block;">Eliminar</a>
+                            {% else %}
+                                <span style="color: #95a5a6; font-size: 12px; font-style: italic;">Sin Permiso de Edición</span>
+                            {% endif %}
                         </td>
-                        {% endif %}
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -248,16 +267,11 @@
                         <td>{{ doc.ano_cursado }}</td>
                         <td>{{ doc.literal or 'N/A' }}</td>
                         <td>
-                            {% set is_allowed_admin = doc.tipo_documento in ['Planilla de Inscripción', 'Constancia de Estudio', 'Constancia de Cupo', 'Constancia de Inscripción'] %}
                             {% if session['rol'] in ['desarrollador', 'directora'] %}
                                 <a href="{{ url_for('editar_documento', id=doc.id) }}" style="background-color: #f39c12; color: white; padding: 5px 10px; border-radius: 4px; text-decoration: none; font-size: 12px; font-weight: bold; margin-right: 5px; display: inline-block;">Editar</a>
                                 <a href="{{ url_for('eliminar_documento', id=doc.id) }}" onclick="return confirm('¿Está seguro de eliminar este documento de la base de datos?');" style="background-color: #e74c3c; color: white; padding: 5px 10px; border-radius: 4px; text-decoration: none; font-size: 12px; font-weight: bold; display: inline-block;">Eliminar</a>
-                            {% elif session['rol'] == 'administracion' %}
-                                {% if is_allowed_admin %}
-                                    <a href="{{ url_for('editar_documento', id=doc.id) }}" style="background-color: #f39c12; color: white; padding: 5px 10px; border-radius: 4px; text-decoration: none; font-size: 12px; font-weight: bold; display: inline-block;">Editar</a>
-                                {% else %}
-                                    <span style="color: #95a5a6; font-size: 12px; font-style: italic;">Sin Permiso de Edición</span>
-                                {% endif %}
+                            {% else %}
+                                <span style="color: #95a5a6; font-size: 12px; font-style: italic;">Sin Permiso de Edición</span>
                             {% endif %}
                         </td>
                     </tr>
@@ -272,7 +286,7 @@
     <hr>
 
     <footer>
-        <p style="text-align: center;">© 2026 Prototipo de Sistema de Matrícula - E.B.N. General Rafael Urdaneta</p>
+        <p style="text-align: center;"> 2026 Prototipo de Sistema de Matrícula - E.B.N. General Rafael Urdaneta</p>
     </footer>
 
 </body>
