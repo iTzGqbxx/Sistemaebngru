@@ -144,7 +144,10 @@ def editar_documento(id):
         return redirect(url_for('login'))
         
     rol = session.get('rol')
-    
+    if rol == 'administracion':
+        flash('Acceso denegado: El personal de administración solo tiene permisos para registrar, no para modificar.', 'error')
+        return redirect(url_for('ver_datos'))
+        
     conn = db_connection.get_connection()
     c = conn.cursor(dictionary=True)
     c.execute('SELECT * FROM documentos WHERE id = %s', (id,))
@@ -153,17 +156,6 @@ def editar_documento(id):
     
     if not doc:
         flash('Documento no encontrado.', 'error')
-        return redirect(url_for('ver_datos'))
-        
-    documentos_permitidos_admin = [
-        'Planilla de Inscripción',
-        'Constancia de Estudio',
-        'Constancia de Cupo',
-        'Constancia de Inscripción'
-    ]
-    
-    if rol == 'administracion' and doc['tipo_documento'] not in documentos_permitidos_admin:
-        flash('Acceso denegado: No tiene permisos para modificar este tipo de documento.', 'error')
         return redirect(url_for('ver_datos'))
         
     if request.method == 'POST':
@@ -180,10 +172,6 @@ def editar_documento(id):
             
         literal = request.form.get('literal', None)
         
-        if rol == 'administracion' and tipo_documento not in documentos_permitidos_admin:
-            flash('Acceso denegado: No puede cambiar el documento a un tipo no autorizado.', 'error')
-            return redirect(url_for('ver_datos'))
-            
         conn = db_connection.get_connection()
         c = conn.cursor()
         c.execute('''
@@ -197,7 +185,53 @@ def editar_documento(id):
         flash('Documento modificado con éxito.', 'success')
         return redirect(url_for('ver_datos'))
         
-    return render_template('editar_documento.html', doc=doc, allowed_types=documentos_permitidos_admin if rol == 'administracion' else None)
+    return render_template('editar_documento.html', doc=doc)
+
+@app.route('/editar_inscripcion/<int:id>', methods=['GET', 'POST'])
+def editar_inscripcion(id):
+    if 'usuario' not in session:
+        return redirect(url_for('login'))
+        
+    rol = session.get('rol')
+    if rol == 'administracion':
+        flash('Acceso denegado: El personal de administración solo tiene permisos para registrar estudiantes, no para modificarlos.', 'error')
+        return redirect(url_for('ver_datos'))
+        
+    conn = db_connection.get_connection()
+    c = conn.cursor(dictionary=True)
+    c.execute('SELECT * FROM inscripciones WHERE id = %s', (id,))
+    ins = c.fetchone()
+    conn.close()
+    
+    if not ins:
+        flash('Inscripción no encontrada.', 'error')
+        return redirect(url_for('ver_datos'))
+        
+    if request.method == 'POST':
+        nombre = request.form['nombre']
+        apellido = request.form['apellido']
+        cedula = request.form['cedula']
+        ano_cursado = request.form['ano_cursado']
+        rep_nombre = request.form['rep_nombre']
+        rep_correo = request.form['rep_correo']
+        rep_apellido = request.form.get('rep_apellido', 'No registrado')
+        rep_telefono = request.form.get('rep_telefono', 'No registrado')
+        
+        conn = db_connection.get_connection()
+        c = conn.cursor()
+        c.execute('''
+            UPDATE inscripciones 
+            SET nombre = %s, apellido = %s, cedula = %s, ano_cursado = %s,
+                rep_nombre = %s, rep_correo = %s, rep_apellido = %s, rep_telefono = %s
+            WHERE id = %s
+        ''', (nombre, apellido, cedula, ano_cursado, rep_nombre, rep_correo, rep_apellido, rep_telefono, id))
+        conn.commit()
+        conn.close()
+        
+        flash('Inscripción de estudiante actualizada con éxito.', 'success')
+        return redirect(url_for('ver_datos'))
+        
+    return render_template('editar_inscripcion.html', ins=ins)
 
 @app.route('/eliminar_documento/<int:id>')
 def eliminar_documento(id):
@@ -224,8 +258,8 @@ def eliminar_inscripcion(id):
         return redirect(url_for('login'))
         
     rol = session.get('rol')
-    if rol != 'desarrollador':
-        flash('Acceso denegado: Únicamente el Desarrollador puede eliminar inscripciones.', 'error')
+    if rol not in ['desarrollador', 'directora']:
+        flash('Acceso denegado: El personal de administración no tiene permisos para eliminar registros.', 'error')
         return redirect(url_for('ver_datos'))
         
     conn = db_connection.get_connection()
