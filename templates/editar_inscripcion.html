@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema Escolar - Modificar Inscripción</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+
+    <header>
+        <h1>Control de Estudios - E.B.N. General Rafael Urdaneta</h1>
+        <nav>
+            {% set fallback_url = url_for('ver_datos') %}
+            {% include '_boton_atras.html' %}
+            <a href="{{ url_for('dashboard') }}" style="margin-right: 15px;">Inicio</a>
+            <a href="{{ url_for('ver_datos') }}" style="margin-right: 15px;">Ver Registros</a>
+            <a href="{{ url_for('logout') }}">Cerrar Sesión</a>
+        </nav>
+    </header>
+    <hr>
+
+    <main>
+        <h2>Módulo de Modificación de Inscripción</h2>
+        <p>Actualice los datos del estudiante o sus representantes en la matrícula escolar.</p>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }}" style="color: #c0392b; background-color: #fdede9; padding: 10px; border-radius: 6px; margin-bottom: 20px; font-size: 13px; font-weight: bold; border: 1px solid #e74c3c; text-align: center;">
+                 {{ message }}
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <form action="{{ url_for('editar_inscripcion', id=ins.id) }}" method="POST">
+            <fieldset>
+                <legend><strong>Datos del Estudiante (ID Matrícula: {{ ins.id }})</strong></legend>
+                <br>
+                <label for="nombre">Nombres del Estudiante:</label><br>
+                <input type="text" id="nombre" name="nombre" value="{{ ins.nombre }}" required><br><br>
+
+                <label for="apellido">Apellidos del Estudiante:</label><br>
+                <input type="text" id="apellido" name="apellido" value="{{ ins.apellido }}" required><br><br>
+
+                <label for="cedula">Cédula o Cédula Escolar del Estudiante:</label><br>
+                <input type="text" id="cedula" name="cedula" value="{{ ins.cedula }}" required><br><br>
+
+                <label for="ano_cursado">Grado y Sección Cursado (Ej: 1er Grado - Sección A):</label><br>
+                <input type="text" id="ano_cursado" name="ano_cursado" value="{{ ins.ano_cursado }}" required><br><br>
+            </fieldset>
+            <br>
+
+            <fieldset>
+                <legend><strong>Datos de los Padres / Representantes</strong></legend>
+                <br>
+                <label for="rep_nombre">Nombre Completo de la Madre:</label><br>
+                <input type="text" id="rep_nombre" name="rep_nombre" value="{{ ins.rep_nombre }}" required><br><br>
+
+                <label for="rep_correo">Cédula de Identidad de la Madre:</label><br>
+                <input type="text" id="rep_correo" name="rep_correo" value="{{ ins.rep_correo }}" required><br><br>
+
+                <label for="rep_apellido">Nombre Completo del Padre (Opcional):</label><br>
+                <input type="text" id="rep_apellido" name="rep_apellido" value="{{ ins.rep_apellido }}"><br><br>
+
+                <label for="rep_telefono">Cédula de Identidad del Padre (Opcional):</label><br>
+                <input type="text" id="rep_telefono" name="rep_telefono" value="{{ ins.rep_telefono }}"><br><br>
+            </fieldset>
+            <br>
+
+            <div style="text-align: center; display: flex; gap: 15px; justify-content: center;">
+                <button type="submit" style="padding: 10px 20px; font-size: 16px; background-color: #27ae60; width: auto;">Guardar Cambios</button>
+                <a href="{{ url_for('ver_datos') }}" style="padding: 10px 20px; font-size: 16px; background-color: #7f8c8d; color: white; text-decoration: none; border-radius: 4px; font-weight: bold; line-height: 20px;">Cancelar</a>
+            </div>
+        </form>
+    </main>
+    <br>
+
+    <footer>
+        <p style="text-align: center;"> 2026 Prototipo de Sistema de Matrícula - E.B.N. General Rafael Urdaneta</p>
+    </footer>
+
+</body>
+</html>
