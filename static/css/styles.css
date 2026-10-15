@@ -646,3 +646,23 @@ input[readonly] {
 }
 
 /* Corregido: Llave de cierre agregada */
+
+/* Alertas generales */
+.alert {
+    padding: 12px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    font-size: 13px;
+    font-weight: bold;
+    text-align: center;
+}
+.alert-error {
+    color: #c0392b;
+    background-color: #fdede9;
+    border: 1px solid #e74c3c;
+}
+.alert-success {
+    color: #27ae60;
+    background-color: #ebf7ee;
+    border: 1px solid #2ecc71;
+}
