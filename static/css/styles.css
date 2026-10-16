@@ -60,6 +60,26 @@ body:not(.cuerpo-dashboard) > header nav .boton-atras:hover {
     background: transparent;
 }
 
+body:not(.cuerpo-dashboard) > header nav .boton-refrescar {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    width: auto;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    color: #ffcc00;
+    background: transparent;
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+body:not(.cuerpo-dashboard) > header nav .boton-refrescar:hover {
+    color: #ffdc55;
+    background: transparent;
+}
+
 /* 3. BLOQUE PRINCIPAL (MAIN) */
 main {
     background-color: #ffffff;
@@ -133,6 +153,15 @@ select {
     color: #1a4a75;
     font-size: 13px;
     font-weight: 600;
+}
+
+.campo-archivo small {
+    display: block;
+    min-height: 2.5em;
+    margin-bottom: 8px;
+    overflow-wrap: anywhere;
+    color: #596b7a;
+    font-size: 11px;
 }
 
 .campo-archivo input[type="file"] {
@@ -432,6 +461,24 @@ input[readonly] {
     margin: 0;
 }
 
+.usuario-logout .boton-refrescar {
+    width: auto;
+    margin: 0;
+    padding: 6px 0;
+    border: 0;
+    color: #ffcc00;
+    background: transparent;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+.usuario-logout .boton-refrescar:hover {
+    color: #ffdc55;
+    background: transparent;
+}
+
 /* Contenedor de la Distribución Horizontal */
 .interfaz-contenedor {
     display: flex;
@@ -538,10 +585,12 @@ input[readonly] {
     flex: 0 0 250px;
 }
 
-.ilustracion-bienvenida svg {
+.ilustracion-bienvenida img {
     display: block;
     width: 100%;
     height: auto;
+    max-height: 190px;
+    object-fit: contain;
 }
 
 .accesos-dashboard {
@@ -606,6 +655,94 @@ input[readonly] {
     background-color: #fff6dc;
 }
 
+.tarjeta-acceso-rojo .icono-acceso {
+    color: #c0392b;
+    background-color: #fdede9;
+}
+
+.tarjeta-acceso-rojo .contenido-acceso strong,
+.tarjeta-acceso-rojo .flecha-acceso {
+    color: #a93226;
+}
+
+.tarjeta-acceso-eliminar {
+    width: 100%;
+    margin: 0;
+    border: 1px solid #e1e7ed;
+    font-family: inherit;
+    text-align: left;
+}
+
+.tarjeta-acceso-eliminar:hover {
+    background-color: #ffffff;
+}
+
+.seleccion-eliminar .aviso-eliminacion {
+    padding: 12px 14px;
+    border-left: 4px solid #e74c3c;
+    border-radius: 4px;
+    color: #8c2f25;
+    background-color: #fdede9;
+}
+
+.grupo-eliminar-estudiantes {
+    margin-top: 24px;
+}
+
+.grupo-eliminar-estudiantes h3 {
+    margin: 0 0 10px;
+    padding: 8px 12px;
+    border-left: 4px solid #1a4a75;
+    color: #1a4a75;
+    background-color: #eaf1f7;
+    font-size: 16px;
+}
+
+.lista-eliminar-estudiantes {
+    overflow: hidden;
+    border: 1px solid #e1e7ed;
+    border-radius: 6px;
+}
+
+.fila-eliminar-estudiante {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 11px 14px;
+    background-color: #ffffff;
+}
+
+.fila-eliminar-estudiante + .fila-eliminar-estudiante {
+    border-top: 1px solid #e8edf1;
+}
+
+.nombre-eliminar-estudiante {
+    font-weight: 600;
+}
+
+.fila-eliminar-estudiante form {
+    margin: 0;
+}
+
+.btn-eliminar-estudiante {
+    width: auto;
+    margin: 0;
+    padding: 7px 12px;
+    border: 0;
+    border-radius: 4px;
+    color: #ffffff;
+    background-color: #e74c3c;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.btn-eliminar-estudiante:hover {
+    background-color: #c0392b;
+}
+
 .contenido-acceso {
     display: flex;
     flex: 1;
@@ -654,7 +791,8 @@ input[readonly] {
     }
 
     .usuario-logout .boton-atras,
-    .btn-logout {
+    .btn-logout,
+    .usuario-logout .boton-refrescar {
         padding: 6px 9px;
         font-size: 12px;
         white-space: nowrap;
@@ -864,6 +1002,12 @@ input[readonly] {
     color: #1a4a75;
 }
 
+.titulo-seccion-archivos {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
 .datos-ficha {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -872,6 +1016,7 @@ input[readonly] {
 }
 
 .datos-ficha div {
+    position: relative;
     padding: 10px;
     border-left: 3px solid #1a4a75;
     background-color: #f4f6f9;
@@ -890,6 +1035,65 @@ input[readonly] {
     overflow-wrap: anywhere;
 }
 
+.datos-ficha dd.dato-editable {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dato-valor {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.lapiz-editar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 4px;
+    border: 1px solid #aeb7bf;
+    color: #1a4a75;
+    background-color: transparent;
+    font-size: 18px;
+    line-height: 1;
+    text-decoration: none;
+    box-sizing: border-box;
+}
+
+.lapiz-editar:hover {
+    border-color: #1a4a75;
+    color: #1a4a75;
+    background-color: rgba(26, 74, 117, 0.08);
+}
+
+.icono-lapiz {
+    display: inline-block;
+    transform: scaleX(-1);
+}
+
+.lapiz-editar:focus-visible {
+    outline: 2px solid #1a4a75;
+    outline-offset: 2px;
+}
+
+.dato-editable {
+    padding-right: 0;
+}
+
+.lapiz-editar-dato {
+    position: static;
+    flex: 0 0 26px;
+    margin-left: auto;
+    transform: none;
+}
+
+.lapiz-editar-archivos {
+    flex: 0 0 26px;
+    margin-left: 12px;
+}
+
 .sin-archivos-ficha {
     padding: 14px;
     border: 1px dashed #cccccc;
@@ -905,6 +1109,7 @@ input[readonly] {
 }
 
 .tarjeta-archivo {
+    position: relative;
     overflow: hidden;
     border: 1px solid #d9e1e8;
     border-radius: 6px;
@@ -937,10 +1142,13 @@ input[readonly] {
 }
 
 .info-archivo {
+    position: relative;
     display: flex;
     flex-direction: column;
     gap: 6px;
-    padding: 12px;
+    min-height: 78px;
+    padding: 12px 132px 12px 12px;
+    box-sizing: border-box;
 }
 
 .info-archivo strong {
@@ -961,6 +1169,33 @@ input[readonly] {
     font-weight: 600;
 }
 
+.form-quitar-archivo {
+    position: absolute;
+    z-index: 1;
+    top: 12px;
+    right: 12px;
+    margin: 0;
+}
+
+.btn-quitar-archivo {
+    width: auto;
+    margin: 0;
+    padding: 7px 12px;
+    border: 0;
+    border-radius: 4px;
+    color: #ffffff;
+    background-color: #e74c3c;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.btn-quitar-archivo:hover {
+    color: #ffffff;
+    background-color: #c0392b;
+}
+
 .acciones-ficha {
     display: flex;
     flex-wrap: wrap;
@@ -968,23 +1203,24 @@ input[readonly] {
     margin-top: 24px;
 }
 
-.btn-editar-registro,
+.acciones-ficha form {
+    margin: 0;
+}
+
 .acciones-ficha .btn-eliminar {
     display: inline-block;
+    width: auto;
+    margin: 0;
     padding: 7px 12px;
+    border: 0;
     border-radius: 4px;
     color: #ffffff;
-    text-decoration: none;
+    background-color: #e74c3c;
+    font-family: inherit;
     font-size: 13px;
     font-weight: bold;
-}
-
-.btn-editar-registro {
-    background-color: #f39c12;
-}
-
-.acciones-ficha .btn-eliminar {
-    background-color: #e74c3c;
+    text-decoration: none;
+    cursor: pointer;
 }
 
 @media print {
@@ -1019,7 +1255,9 @@ input[readonly] {
     header,
     footer,
     body > hr,
-    .no-imprimir {
+    .no-imprimir,
+    .form-quitar-archivo,
+    .btn-quitar-archivo {
         display: none !important;
     }
 
