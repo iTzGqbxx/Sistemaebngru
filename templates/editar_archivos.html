@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar archivos del expediente</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <header>
+        <h1>Control de Estudios - E.B.N. General Rafael Urdaneta</h1>
+        <nav>
+            {% set fallback_url = url_for('ficha_estudiante', id=estudiante.id) %}
+            {% include '_boton_atras.html' %}
+            <a href="{{ url_for('dashboard') }}" style="margin-right: 15px;">Inicio</a>
+            <a href="{{ url_for('ver_datos') }}" style="margin-right: 15px;">Ver Registros</a>
+            <a href="{{ url_for('logout') }}">Cerrar sesión</a>
+            {% include '_boton_refrescar.html' %}
+        </nav>
+    </header>
+    <hr>
+
+    <main>
+        <h2>Actualizar archivos del expediente</h2>
+        <p>Estudiante: <strong>{{ estudiante.nombre }} {{ estudiante.apellido }}</strong></p>
+        <p>Seleccione únicamente los archivos que desea agregar o reemplazar. Si deja un campo vacío, el archivo actual se conserva.</p>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <form action="{{ url_for('editar_archivos_inscripcion', id=estudiante.id) }}" method="POST" enctype="multipart/form-data">
+            <div class="rejilla-archivos">
+                {% for campo, datos in archivos_inscripcion.items() %}
+                {% set tipo = datos[0] %}
+                <div class="campo-archivo">
+                    <label for="{{ campo }}">{{ tipo }}</label>
+                    {% if tipo in archivos_por_tipo %}
+                    <small>Actual: {{ archivos_por_tipo[tipo].nombre_original }}</small>
+                    {% else %}
+                    <small>Sin archivo actual</small>
+                    {% endif %}
+                    <input type="file" id="{{ campo }}" name="{{ campo }}" accept="{{ datos[1]|join(',') }}">
+                </div>
+                {% endfor %}
+            </div>
+            <br>
+            <div style="text-align: center; display: flex; gap: 15px; justify-content: center;">
+                <button type="submit" style="padding: 10px 20px; font-size: 16px; background-color: #27ae60; width: auto;">Guardar archivos</button>
+                <a href="{{ url_for('ficha_estudiante', id=estudiante.id) }}" style="padding: 10px 20px; font-size: 16px; background-color: #7f8c8d; color: white; text-decoration: none; border-radius: 4px; font-weight: bold; line-height: 20px;">Cancelar</a>
+            </div>
+        </form>
+    </main>
+</body>
+</html>

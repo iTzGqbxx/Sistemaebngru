@@ -14,19 +14,20 @@
             {% set fallback_url = url_for('dashboard') %}
             {% include '_boton_atras.html' %}
             <a href="{{ url_for('dashboard') }}" style="margin-right: 15px;">Inicio</a>
-            <a href="{{ url_for('logout') }}">Cerrar Sesión</a>
+            <a href="{{ url_for('logout') }}">Cerrar sesión</a>
+            {% include '_boton_refrescar.html' %}
         </nav>
     </header>
     <hr>
 
     <main>
         <h2>Módulo de Inscripción y Matrícula</h2>
-        <p>Complete todos los campos del estudiante, representantes y adjunte los requisitos legales exigidos.</p>
+        <p>Complete todos los campos del estudiante y sus representantes, y adjunte los requisitos legales exigidos.</p>
 
-        {% if session['rol'] in ['directora', 'administracion'] %}
+        {% if session['rol'] in ['directora', 'administracion', 'administrador', 'administracionGRU'] %}
         <div class="cautela-banner" style="background-color: #fff9e6; border-left: 6px solid #f39c12; color: #7f8c8d; padding: 15px; border-radius: 6px; margin-bottom: 20px; font-size: 13px;">
-            <h4 style="margin: 0 0 5px 0; color: #d35400; font-weight: bold; font-size: 14px;"> Advertencia de Cautela (Validación de Datos)</h4>
-            <p style="margin: 0;">Estimado(a) <strong>{{ 'Directora' if session['rol'] == 'directora' else 'Personal de Administración' }}</strong>, recuerde que debe verificar y validar meticulosamente la documentación física original (Cédulas y Partida de Nacimiento) del estudiante antes de guardar el registro en la base de datos de matrícula.</p>
+            <h4 style="margin: 0 0 5px 0; color: #d35400; font-weight: bold; font-size: 14px;">Validación de datos</h4>
+            <p style="margin: 0;">Estimado(a) <strong>{{ 'directora' if session['rol'] == 'directora' else 'administrador' }}</strong>, recuerde que debe verificar cuidadosamente la documentación física original (cédulas y partida de nacimiento) del estudiante antes de guardar el registro en la base de datos de matrícula.</p>
         </div>
         {% endif %}
 
@@ -43,11 +44,11 @@
         <form action="{{ url_for('inscripcion') }}" method="POST" enctype="multipart/form-data">
             
             <fieldset>
-                <legend><strong>1. Ubicación Académica</strong></legend>
+                <legend><strong>1. Ubicación académica</strong></legend>
                 <br>
-                <label for="grado">Grado a Cursar:</label>
+                <label for="grado">Grado a cursar:</label>
                 <select id="grado" name="grado" required>
-                    <option value="">-- Seleccione el Grado --</option>
+                    <option value="">-- Seleccione el grado --</option>
                     <option value="1">1er Grado</option>
                     <option value="2">2do Grado</option>
                     <option value="3">3er Grado</option>
@@ -55,9 +56,9 @@
                     <option value="5">5to Grado</option>
                 </select>
                 &nbsp;&nbsp;
-                <label for="seccion">Sección Asignada:</label>
+                <label for="seccion">Sección asignada:</label>
                 <select id="seccion" name="seccion" required>
-                    <option value="">-- Seleccione la Sección --</option>
+                    <option value="">-- Seleccione la sección --</option>
                     <option value="A">Sección A</option>
                     <option value="B">Sección B</option>
                     <option value="C">Sección C</option>
@@ -68,41 +69,47 @@
             <br>
 
             <fieldset>
-                <legend><strong>2. Datos del Estudiante</strong></legend>
+                <legend><strong>2. Datos del estudiante</strong></legend>
                 <br>
-                <label for="cedula_estudiantil">Cédula Estudiantil / Escolar:</label><br>
-                <input type="text" id="cedula_estudiantil" name="cedula_estudiantil" placeholder="Ej. V-11500000000" required><br><br>
+                <label for="cedula_estudiantil">Cédula de identidad (si posee una) / escolar:</label><br>
+                <input type="text" id="cedula_estudiantil" name="cedula_estudiantil" placeholder="Ej. V319458534" inputmode="text" pattern="[Vv][0-9]+" title="Ingrese la letra V seguida de números." required><br><br>
 
-                <label for="nombres_estudiante">Nombres Completos:</label><br>
+                <label for="nombres_estudiante">Nombres completos:</label><br>
                 <input type="text" id="nombres_estudiante" name="nombres_estudiante" required><br><br>
 
-                <label for="apellidos_estudiante">Apellidos Completos:</label><br>
+                <label for="apellidos_estudiante">Apellidos completos:</label><br>
                 <input type="text" id="apellidos_estudiante" name="apellidos_estudiante" required><br><br>
             </fieldset>
             <br>
 
             <fieldset>
-                <legend><strong>3. Información de los Padres</strong></legend>
+                <legend><strong>3. Información de los padres</strong></legend>
                 <br>
-                <h3>Datos de la Madre:</h3>
-                <label for="cedula_madre">Cédula de la Madre:</label><br>
-                <input type="text" id="cedula_madre" name="cedula_madre" placeholder="Ej. V-15000000" required><br><br>
+                <h3>Datos de la madre:</h3>
+                <label for="repMadre_cedula">Cédula de la madre:</label><br>
+                <input type="text" id="repMadre_cedula" name="repMadre_cedula" placeholder="Ej. V319458534" inputmode="text" pattern="[Vv][0-9]+" title="Ingrese la letra V seguida de números." required><br><br>
 
-                <label for="nombre_madre">Nombres y Apellidos de la Madre:</label><br>
-                <input type="text" id="nombre_madre" name="nombre_madre" required><br><br>
+                <label for="repMadre_nombre">Nombres de la madre:</label><br>
+                <input type="text" id="repMadre_nombre" name="repMadre_nombre" required><br><br>
 
-                <h3>Datos del Padre:</h3>
-                <label for="cedula_padre">Cédula del Padre (Opcional):</label><br>
-                <input type="text" id="cedula_padre" name="cedula_padre" placeholder="Ej. V-14000000"><br><br>
+                <label for="repMadre_apellido">Apellidos de la madre:</label><br>
+                <input type="text" id="repMadre_apellido" name="repMadre_apellido" required><br><br>
 
-                <label for="nombre_padre">Nombres y Apellidos del Padre:</label><br>
-                <input type="text" id="nombre_padre" name="nombre_padre"><br><br>
+                <h3>Datos del padre:</h3>
+                <label for="repPadre_cedula">Cédula del padre (opcional):</label><br>
+                <input type="text" id="repPadre_cedula" name="repPadre_cedula" placeholder="Ej. V319458534" inputmode="text" pattern="[Vv][0-9]+" title="Ingrese la letra V seguida de números."><br><br>
+
+                <label for="repPadre_nombre">Nombres del padre (opcional):</label><br>
+                <input type="text" id="repPadre_nombre" name="repPadre_nombre"><br><br>
+
+                <label for="repPadre_apellido">Apellidos del padre (opcional):</label><br>
+                <input type="text" id="repPadre_apellido" name="repPadre_apellido"><br><br>
             </fieldset>
             <br>
 
             <fieldset>
-                <legend><strong>4. Requisitos y Documentos Adjuntos</strong></legend>
-                <p class="ayuda-archivos">Adjunte los documentos en PDF o imagen (JPG, PNG o WEBP). Son opcionales, quedarán guardados en el expediente y el tamaño total no debe superar 32 MB.</p>
+                <legend><strong>4. Requisitos y documentos adjuntos</strong></legend>
+                <p class="ayuda-archivos">Adjunte los documentos en PDF o imagen (JPG, PNG o WEBP).</p>
 
                 <div class="rejilla-archivos">
                     <div class="campo-archivo">
@@ -110,7 +117,7 @@
                         <input type="file" id="doc_partida_nacimiento" name="doc_partida_nacimiento" accept=".pdf,.jpg,.jpeg,.png,.webp">
                     </div>
                     <div class="campo-archivo">
-                        <label for="doc_cedula_estudiante">Copia de cédula del estudiante (si tiene cédula propia)</label>
+                        <label for="doc_cedula_estudiante">Copia de cédula del estudiante (de disponer una propia)</label>
                         <input type="file" id="doc_cedula_estudiante" name="doc_cedula_estudiante" accept=".pdf,.jpg,.jpeg,.png,.webp">
                     </div>
                     <div class="campo-archivo">
@@ -138,7 +145,7 @@
             <br>
 
             <div style="text-align: center;">
-                <button type="submit" style="padding: 10px 20px; font-size: 16px;">Guardar e Inscribir Estudiante</button>
+                <button type="submit" style="padding: 10px 20px; font-size: 16px;">Guardar e inscribir estudiante</button>
             </div>
 
         </form>
@@ -146,7 +153,7 @@
     <hr>
 
     <footer>
-        <p style="text-align: center;"> 2026 Prototipo de Sistema de Matrícula - E.B.N. General Rafael Urdaneta</p>
+        <p style="text-align: center;">2026 Prototipo de sistema de matrícula - E.B.N. General Rafael Urdaneta</p>
     </footer>
 
 </body>

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eliminar estudiante - Sistema Escolar</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <header>
+        <h1>Control de Estudios - E.B.N. General Rafael Urdaneta</h1>
+        <nav>
+            {% set fallback_url = url_for('dashboard') %}
+            {% include '_boton_atras.html' %}
+            <a href="{{ url_for('dashboard') }}">Inicio</a>
+            <a href="{{ url_for('ver_datos') }}">Ver Registros</a>
+            <a href="{{ url_for('logout') }}">Cerrar sesión</a>
+            {% include '_boton_refrescar.html' %}
+        </nav>
+    </header>
+    <hr>
+
+    <main class="seleccion-eliminar">
+        <h2>Eliminar estudiante</h2>
+        <p class="aviso-eliminacion">Esta acción elimina permanentemente la inscripción y sus archivos adjuntos.</p>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        {% if inscripciones %}
+            {% for grupo in inscripciones|groupby('ano_cursado') %}
+                <section class="grupo-eliminar-estudiantes">
+                    <h3>{{ grupo.grouper or 'Grado y sección sin especificar' }}</h3>
+                    <div class="lista-eliminar-estudiantes">
+                        {% for estudiante in grupo.list %}
+                            <div class="fila-eliminar-estudiante">
+                                <span class="nombre-eliminar-estudiante">{{ estudiante.nombre }} {{ estudiante.apellido }}</span>
+                                <form action="{{ url_for('eliminar_inscripcion', id=estudiante.id) }}" method="POST"
+                                      onsubmit="return confirm('¿Eliminar permanentemente la inscripción de este estudiante y sus archivos? Esta acción no se puede deshacer.');">
+                                    <button type="submit" class="btn-eliminar-estudiante">Eliminar</button>
+                                </form>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </section>
+            {% endfor %}
+        {% else %}
+            <p class="sin-datos">No hay estudiantes inscritos para eliminar.</p>
+        {% endif %}
+    </main>
+</body>
+</html>

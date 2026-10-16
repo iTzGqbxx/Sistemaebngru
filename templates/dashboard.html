@@ -34,22 +34,25 @@
                 <p>Bienvenido(a), Desarrollador ({{ session['usuario'] }})</p>
                 {% elif session['rol'] == 'directora' %}
                 <p>Bienvenido(a), Directora ({{ session['usuario'] }})</p>
+                {% elif session['rol'] in ['administracion', 'administrador', 'administracionGRU'] %}
+                <p>Bienvenido(a), Administrador ({{ session['usuario'] }})</p>
                 {% else %}
-                <p>Bienvenido(a), Personal de Administración ({{ session['usuario'] }})</p>
+                <p>Bienvenido(a), {{ session['usuario'] }}</p>
                 {% endif %}
             </div>
         </div>
         <div class="usuario-logout">
             {% set fallback_url = url_for('ver_datos') %}
             {% include '_boton_atras.html' %}
-            <div class="avatar-rol avatar-{{ session.get('rol', 'administracion') }}"
+            <div class="avatar-rol avatar-{{ 'administracion' if session.get('rol') in ['administrador', 'administracionGRU'] else session.get('rol', 'administracion') }}"
                 title="Rol: {{ session.get('rol', 'administracion')|capitalize }}">
                 <svg viewBox="0 0 24 24" class="icono-silueta" aria-hidden="true">
                     <path
                         d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z" />
                 </svg>
             </div>
-            <a href="{{ url_for('logout') }}" class="btn-logout">Cerrar Sesión</a>
+            <a href="{{ url_for('logout') }}" class="btn-logout">Cerrar sesión</a>
+            {% include '_boton_refrescar.html' %}
         </div>
     </header>
 
@@ -61,7 +64,7 @@
             <nav class="menu-navegacion">
                 <a href="{{ url_for('dashboard') }}" class="enlace-nav activo"> Inicio</a>
                 <a href="{{ url_for('inscripcion') }}" class="enlace-nav"> Inscripciones</a>
-                <a href="{{ url_for('ver_datos') }}" class="enlace-nav"> Ver Registros</a>
+                <a href="{{ url_for('ver_datos') }}" class="enlace-nav"> Ver registros</a>
             </nav>
         </aside>
 
@@ -85,20 +88,20 @@
             <!-- PANEL DE CONTROL DE DESARROLLADOR -->
             <div class="tarjeta-config-logos"
                 style="border: 2px solid #3498db; background-color: #f7fafd; margin-bottom: 25px;">
-                <h5 style="color: #2980b9; font-weight: bold; margin-bottom: 5px;"> Panel de Desarrollador - Estado del
-                    Sistema</h5>
+                <h5 style="color: #2980b9; font-weight: bold; margin-bottom: 5px;"> Panel de desarrollador - Estado del
+                    sistema</h5>
                 <p style="font-size: 12px; color: #444; margin-bottom: 12px;">Acceso administrativo total concedido al
-                    Desarrollador. Puede eliminar y modificar registros en MySQL.</p>
+                    desarrollador. Puede eliminar y modificar registros en MySQL.</p>
                 <div style="display: flex; gap: 15px; flex-wrap: wrap;">
                     <div
                         style="background-color: #fff; padding: 10px; border-radius: 6px; flex: 1; border: 1px solid #cbd5e1; min-width: 120px;">
-                        <div style="font-size: 11px; color: #7f8c8d;">Base de Datos</div>
+                        <div style="font-size: 11px; color: #7f8c8d;">Base de datos</div>
                         <div style="font-size: 13px; font-weight: bold; color: #27ae60;">MySQL activa</div>
                     </div>
                     <div
                         style="background-color: #fff; padding: 10px; border-radius: 6px; flex: 1; border: 1px solid #cbd5e1; min-width: 120px;">
-                        <div style="font-size: 11px; color: #7f8c8d;">Permisos de Borrado</div>
-                        <div style="font-size: 13px; font-weight: bold; color: #c0392b;">Habilitados (Full Delete)</div>
+                        <div style="font-size: 11px; color: #7f8c8d;">Permisos de eliminación</div>
+                        <div style="font-size: 13px; font-weight: bold; color: #c0392b;">Habilitados (eliminación total)</div>
                     </div>
                 </div>
             </div>
@@ -110,19 +113,9 @@
                     <h3>Una gestión escolar más sencilla</h3>
                     <p>Administra las inscripciones, consulta las fichas de los estudiantes y organiza sus archivos adjuntos desde un solo lugar.</p>
                 </div>
-                <div class="ilustracion-bienvenida" aria-hidden="true">
-                    <svg viewBox="0 0 260 190" role="presentation">
-                        <circle cx="130" cy="94" r="82" fill="#dceaf5"/>
-                        <path d="M52 148h156v12H52z" fill="#1a4a75" opacity=".14"/>
-                        <path d="M75 74 130 44l55 30v70H75z" fill="#fff" stroke="#1a4a75" stroke-width="4" stroke-linejoin="round"/>
-                        <path d="M65 76 130 38l65 38" fill="none" stroke="#1a4a75" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M115 108h30v36h-30z" fill="#dceaf5" stroke="#1a4a75" stroke-width="4"/>
-                        <path d="M88 91h14v14H88zm70 0h14v14h-14z" fill="#ffcc00"/>
-                        <path d="M103 47h15V30h24v17" fill="#fff" stroke="#1a4a75" stroke-width="4" stroke-linejoin="round"/>
-                        <path d="M130 31v16" stroke="#e74c3c" stroke-width="4" stroke-linecap="round"/>
-                        <path d="M58 126h15v18H58zm129 0h15v18h-15z" fill="#ffcc00"/>
-                        <path d="M45 161h170" stroke="#1a4a75" stroke-width="5" stroke-linecap="round"/>
-                    </svg>
+                <div class="ilustracion-bienvenida">
+                    <img src="{{ url_for('static', filename='images/logo-escuela.png') }}"
+                         alt="Logo de la Escuela Básica Nacional General Rafael Urdaneta">
                 </div>
             </section>
 
@@ -148,6 +141,28 @@
                     </span>
                     <span class="flecha-acceso" aria-hidden="true">&rarr;</span>
                 </a>
+
+                {% if mostrar_boton_eliminar %}
+                {% if puede_gestionar_expedientes %}
+                <a href="{{ url_for('seleccionar_estudiante_eliminar') }}" class="tarjeta-acceso tarjeta-acceso-rojo tarjeta-acceso-eliminar">
+                {% else %}
+                <button type="button" class="tarjeta-acceso tarjeta-acceso-rojo tarjeta-acceso-eliminar"
+                        onclick="alert('Como administrador, no tienes permisos para ejecutar esta acción. Llame a la directora para ejecutarla.');">
+                {% endif %}
+                    <span class="icono-acceso" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6m4-6v6M6 7l1 14h10l1-14M9 7V4h6v3"/></svg>
+                    </span>
+                    <span class="contenido-acceso">
+                        <strong>Eliminar estudiante</strong>
+                        <span>{% if puede_gestionar_expedientes %}Seleccionar estudiante y confirmar eliminación{% else %}Requiere autorización de la directora{% endif %}</span>
+                    </span>
+                    <span class="flecha-acceso" aria-hidden="true">&rarr;</span>
+                {% if puede_gestionar_expedientes %}
+                </a>
+                {% else %}
+                </button>
+                {% endif %}
+                {% endif %}
 
             </section>
 

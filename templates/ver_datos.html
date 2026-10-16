@@ -140,23 +140,26 @@
             {% set fallback_url = url_for('dashboard') %}
             {% include '_boton_atras.html' %}
             <a href="{{ url_for('dashboard') }}" style="margin-right: 15px;">Inicio</a>
-            <a href="{{ url_for('logout') }}">Cerrar Sesión</a>
+            <a href="{{ url_for('logout') }}">Cerrar sesión</a>
+            {% include '_boton_refrescar.html' %}
         </nav>
     </header>
     <hr>
 
     <main>
-        <h2>Registros del Sistema</h2>
+        <h2>Registros del sistema</h2>
         <p>A continuación se muestran los estudiantes inscritos, organizados por grado y sección.</p>
         
         <p style="font-size: 13px; color: #555; background-color: #f0f4f8; padding: 10px; border-radius: 5px; border-left: 4px solid #1a4a75;">
-            <strong>Rol de Usuario:</strong> 
+            <strong>Rol de usuario:</strong> 
             {% if session['rol'] == 'desarrollador' %}
-                Desarrollador (Acceso Total y Borrado en BD)
+                Desarrollador (acceso total y eliminación de registros)
             {% elif session['rol'] == 'directora' %}
-                Directora GRU (Inscripción y administración de expedientes)
+                Directora GRU (inscripción y administración de expedientes)
+            {% elif session['rol'] in ['administracion', 'administrador', 'administracionGRU'] %}
+                Administrador (inscripción y edición de expedientes; sin permiso para eliminar)
             {% else %}
-                Administración GRU (Inscripción y Lectura de Registros)
+                {{ session['rol'] }}
             {% endif %}
         </p>
 
@@ -171,12 +174,12 @@
         {% endwith %}
 
         <div class="tabla-cabecera">
-            <h3 class="tabla-titulo">Estudiantes Inscritos</h3>
+            <h3 class="tabla-titulo">Estudiantes inscritos</h3>
             <form class="buscador-form" method="GET" action="{{ url_for('ver_datos') }}">
                 <input type="text" name="q" placeholder="Buscar por nombre, apellido o cédula..." value="{{ search_query or '' }}">
                 
                 <select name="grado">
-                    <option value="">Todos los Grados</option>
+                    <option value="">Todos los grados</option>
                     <option value="1" {% if grado_filter == '1' %}selected{% endif %}>1er Grado</option>
                     <option value="2" {% if grado_filter == '2' %}selected{% endif %}>2do Grado</option>
                     <option value="3" {% if grado_filter == '3' %}selected{% endif %}>3er Grado</option>
@@ -185,7 +188,7 @@
                 </select>
 
                 <select name="seccion">
-                    <option value="">Todas las Secciones</option>
+                    <option value="">Todas las secciones</option>
                     <option value="A" {% if seccion_filter == 'A' %}selected{% endif %}>Sección A</option>
                     <option value="B" {% if seccion_filter == 'B' %}selected{% endif %}>Sección B</option>
                     <option value="C" {% if seccion_filter == 'C' %}selected{% endif %}>Sección C</option>
@@ -222,7 +225,7 @@
     <hr>
 
     <footer>
-        <p style="text-align: center;"> 2026 Prototipo de Sistema de Matrícula - E.B.N. General Rafael Urdaneta</p>
+        <p style="text-align: center;">2026 Prototipo de sistema de matrícula - E.B.N. General Rafael Urdaneta</p>
     </footer>
 
 </body>

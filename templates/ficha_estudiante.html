@@ -14,7 +14,8 @@
             {% include '_boton_atras.html' %}
             <a href="{{ url_for('dashboard') }}" style="margin-right: 15px;">Inicio</a>
             <a href="{{ url_for('ver_datos') }}" style="margin-right: 15px;">Ver Registros</a>
-            <a href="{{ url_for('logout') }}">Cerrar Sesión</a>
+            <a href="{{ url_for('logout') }}">Cerrar sesión</a>
+            {% include '_boton_refrescar.html' %}
         </nav>
     </header>
     <hr>
@@ -23,6 +24,14 @@
         <div class="ficha-acciones no-imprimir">
             <button type="button" class="btn-imprimir-ficha" onclick="window.print()">Imprimir ficha</button>
         </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
 
         <section class="encabezado-ficha">
             <div class="contenido-encabezado-ficha">
@@ -49,15 +58,48 @@
             <h3>Datos del estudiante</h3>
             <dl class="datos-ficha">
                 <div><dt>ID de inscripción</dt><dd>{{ estudiante.id }}</dd></div>
-                <div><dt>Cédula estudiantil</dt><dd>{{ estudiante.cedula }}</dd></div>
-                <div><dt>Nombres</dt><dd>{{ estudiante.nombre }}</dd></div>
-                <div><dt>Apellidos</dt><dd>{{ estudiante.apellido }}</dd></div>
-                <div><dt>Grado y sección actuales</dt><dd>{{ estudiante.ano_cursado }}</dd></div>
+                <div>
+                    <dt>Cédula estudiantil</dt>
+                    <dd class="dato-editable"><span class="dato-valor">{{ estudiante.cedula }}</span>
+                        {% if puede_editar_expedientes %}
+                        <a class="lapiz-editar lapiz-editar-dato no-imprimir" href="{{ url_for('editar_inscripcion', id=estudiante.id, campo='cedula') }}" aria-label="Editar cédula estudiantil" title="Editar cédula"><span class="icono-lapiz">&#9998;</span></a>
+                        {% endif %}
+                    </dd>
+                </div>
+                <div>
+                    <dt>Nombres</dt>
+                    <dd class="dato-editable"><span class="dato-valor">{{ estudiante.nombre }}</span>
+                        {% if puede_editar_expedientes %}
+                        <a class="lapiz-editar lapiz-editar-dato no-imprimir" href="{{ url_for('editar_inscripcion', id=estudiante.id, campo='nombre') }}" aria-label="Editar nombres" title="Editar nombres"><span class="icono-lapiz">&#9998;</span></a>
+                        {% endif %}
+                    </dd>
+                </div>
+                <div>
+                    <dt>Apellidos</dt>
+                    <dd class="dato-editable"><span class="dato-valor">{{ estudiante.apellido }}</span>
+                        {% if puede_editar_expedientes %}
+                        <a class="lapiz-editar lapiz-editar-dato no-imprimir" href="{{ url_for('editar_inscripcion', id=estudiante.id, campo='apellido') }}" aria-label="Editar apellidos" title="Editar apellidos"><span class="icono-lapiz">&#9998;</span></a>
+                        {% endif %}
+                    </dd>
+                </div>
+                <div>
+                    <dt>Grado y sección actuales</dt>
+                    <dd class="dato-editable"><span class="dato-valor">{{ estudiante.ano_cursado }}</span>
+                        {% if puede_editar_expedientes %}
+                        <a class="lapiz-editar lapiz-editar-dato no-imprimir" href="{{ url_for('editar_inscripcion', id=estudiante.id, campo='ano_cursado') }}" aria-label="Editar grado y sección" title="Editar grado y sección"><span class="icono-lapiz">&#9998;</span></a>
+                        {% endif %}
+                    </dd>
+                </div>
             </dl>
         </section>
 
         <section class="seccion-ficha">
-            <h3>Imágenes y archivos del expediente</h3>
+            <h3 class="titulo-seccion-archivos">
+                Imágenes y archivos del expediente
+                {% if puede_editar_expedientes %}
+                <a class="lapiz-editar lapiz-editar-archivos no-imprimir" href="{{ url_for('editar_archivos_inscripcion', id=estudiante.id) }}" aria-label="Editar archivos adjuntos" title="Agregar o reemplazar archivos"><span class="icono-lapiz">&#9998;</span></a>
+                {% endif %}
+            </h3>
             {% if archivos %}
             <div class="galeria-archivos">
                 {% for archivo in archivos %}
@@ -73,10 +115,18 @@
                     <div class="icono-pdf-archivo" aria-hidden="true">PDF</div>
                     {% endif %}
                     <div class="info-archivo">
+                        {% if puede_editar_expedientes %}
+                        <form class="form-quitar-archivo"
+                              action="{{ url_for('eliminar_archivo_inscripcion', id=archivo.id) }}"
+                              method="POST"
+                              onsubmit="return confirm('¿Quieres quitar este archivo del expediente?');">
+                            <button type="submit" class="btn-quitar-archivo">Quitar archivo</button>
+                        </form>
+                        {% endif %}
                         <strong>{{ archivo.tipo }}</strong>
                         <span>{{ archivo.nombre_original }}</span>
                         <a href="{{ url_for('ver_archivo_inscripcion', id=archivo.id) }}"
-                           {% if archivo.extension|lower != '.pdf' %}target="_blank" rel="noopener"{% endif %}>
+                           {% if archivo.extension|lower != '.pdf' %}class="no-imprimir" target="_blank" rel="noopener"{% endif %}>
                             {% if archivo.extension|lower == '.pdf' %}Descargar PDF{% else %}Ver imagen{% endif %}
                         </a>
                     </div>
@@ -91,24 +141,69 @@
         <section class="seccion-ficha">
             <h3>Representantes</h3>
             <dl class="datos-ficha">
-                <div><dt>Nombre de la madre</dt><dd>{{ estudiante.rep_nombre or 'No registrado' }}</dd></div>
-                <div><dt>Cédula de la madre</dt><dd>{{ estudiante.rep_correo or 'No registrado' }}</dd></div>
-                <div><dt>Nombre del padre</dt><dd>{{ estudiante.rep_apellido or 'No registrado' }}</dd></div>
-                <div><dt>Cédula del padre</dt><dd>{{ estudiante.rep_telefono or 'No registrado' }}</dd></div>
+                <div>
+                    <dt>Nombres de la madre</dt>
+                    <dd class="dato-editable"><span class="dato-valor">{{ estudiante.repMadre_nombre or 'No registrado' }}</span>
+                        {% if puede_editar_expedientes %}
+                        <a class="lapiz-editar lapiz-editar-dato no-imprimir" href="{{ url_for('editar_inscripcion', id=estudiante.id, campo='repMadre_nombre') }}" aria-label="Editar nombres de la madre" title="Editar nombres de la madre"><span class="icono-lapiz">&#9998;</span></a>
+                        {% endif %}
+                    </dd>
+                </div>
+                <div>
+                    <dt>Apellidos de la madre</dt>
+                    <dd class="dato-editable"><span class="dato-valor">{{ estudiante.repMadre_apellido or 'No registrado' }}</span>
+                        {% if puede_editar_expedientes %}
+                        <a class="lapiz-editar lapiz-editar-dato no-imprimir" href="{{ url_for('editar_inscripcion', id=estudiante.id, campo='repMadre_apellido') }}" aria-label="Editar apellidos de la madre" title="Editar apellidos de la madre"><span class="icono-lapiz">&#9998;</span></a>
+                        {% endif %}
+                    </dd>
+                </div>
+                <div>
+                    <dt>Cédula de la madre</dt>
+                    <dd class="dato-editable"><span class="dato-valor">{{ estudiante.repMadre_cedula or 'No registrado' }}</span>
+                        {% if puede_editar_expedientes %}
+                        <a class="lapiz-editar lapiz-editar-dato no-imprimir" href="{{ url_for('editar_inscripcion', id=estudiante.id, campo='repMadre_cedula') }}" aria-label="Editar cédula de la madre" title="Editar cédula de la madre"><span class="icono-lapiz">&#9998;</span></a>
+                        {% endif %}
+                    </dd>
+                </div>
+                <div>
+                    <dt>Nombres del padre</dt>
+                    <dd class="dato-editable"><span class="dato-valor">{{ estudiante.repPadre_nombre or 'No registrado' }}</span>
+                        {% if puede_editar_expedientes %}
+                        <a class="lapiz-editar lapiz-editar-dato no-imprimir" href="{{ url_for('editar_inscripcion', id=estudiante.id, campo='repPadre_nombre') }}" aria-label="Editar nombres del padre" title="Editar nombres del padre"><span class="icono-lapiz">&#9998;</span></a>
+                        {% endif %}
+                    </dd>
+                </div>
+                <div>
+                    <dt>Apellidos del padre</dt>
+                    <dd class="dato-editable"><span class="dato-valor">{{ estudiante.repPadre_apellido or 'No registrado' }}</span>
+                        {% if puede_editar_expedientes %}
+                        <a class="lapiz-editar lapiz-editar-dato no-imprimir" href="{{ url_for('editar_inscripcion', id=estudiante.id, campo='repPadre_apellido') }}" aria-label="Editar apellidos del padre" title="Editar apellidos del padre"><span class="icono-lapiz">&#9998;</span></a>
+                        {% endif %}
+                    </dd>
+                </div>
+                <div>
+                    <dt>Cédula del padre</dt>
+                    <dd class="dato-editable"><span class="dato-valor">{{ estudiante.repPadre_cedula or 'No registrado' }}</span>
+                        {% if puede_editar_expedientes %}
+                        <a class="lapiz-editar lapiz-editar-dato no-imprimir" href="{{ url_for('editar_inscripcion', id=estudiante.id, campo='repPadre_cedula') }}" aria-label="Editar cédula del padre" title="Editar cédula del padre"><span class="icono-lapiz">&#9998;</span></a>
+                        {% endif %}
+                    </dd>
+                </div>
             </dl>
         </section>
 
-        {% if session['rol'] in ['desarrollador', 'directora'] %}
         <div class="acciones-ficha no-imprimir">
-            <a href="{{ url_for('editar_inscripcion', id=estudiante.id) }}" class="btn-editar-registro">Editar inscripción</a>
-            <a href="{{ url_for('eliminar_inscripcion', id=estudiante.id) }}" class="btn-eliminar" onclick="return confirm('¿Está seguro de eliminar permanentemente esta inscripción de estudiante? Esta acción no se puede deshacer.');">Eliminar inscripción</a>
-        </div>
+        {% if puede_gestionar_expedientes %}
+            <form action="{{ url_for('eliminar_inscripcion', id=estudiante.id) }}" method="POST" onsubmit="return confirm('¿Está seguro de eliminar permanentemente esta inscripción de estudiante? Esta acción no se puede deshacer.');">
+                <button type="submit" class="btn-eliminar">Eliminar inscripción</button>
+            </form>
         {% endif %}
+        </div>
     </main>
     <hr>
 
     <footer>
-        <p style="text-align: center;">2026 Prototipo de Sistema de Matrícula - E.B.N. General Rafael Urdaneta</p>
+        <p style="text-align: center;">2026 Prototipo de sistema de matrícula - E.B.N. General Rafael Urdaneta</p>
     </footer>
 </body>
 </html>

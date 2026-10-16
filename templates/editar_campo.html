@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar {{ etiqueta }} - Expediente del estudiante</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <header>
+        <h1>Control de Estudios - E.B.N. General Rafael Urdaneta</h1>
+        <nav>
+            {% set fallback_url = url_for('ficha_estudiante', id=ins.id) %}
+            {% include '_boton_atras.html' %}
+            <a href="{{ url_for('dashboard') }}" style="margin-right: 15px;">Inicio</a>
+            <a href="{{ url_for('ver_datos') }}" style="margin-right: 15px;">Ver Registros</a>
+            <a href="{{ url_for('logout') }}">Cerrar sesión</a>
+            {% include '_boton_refrescar.html' %}
+        </nav>
+    </header>
+    <hr>
+
+    <main>
+        <h2>Editar dato del expediente</h2>
+        <p>Estudiante: <strong>{{ ins.nombre }} {{ ins.apellido }}</strong></p>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <form action="{{ url_for('editar_inscripcion', id=ins.id, campo=campo) }}" method="POST">
+            <fieldset>
+                <legend><strong>{{ etiqueta }}</strong></legend>
+                {% if campo == 'ano_cursado' %}
+                <label for="grado">Grado a cursar:</label>
+                <select id="grado" name="grado" required autofocus>
+                    <option value="">-- Seleccione el grado --</option>
+                    {% for grado in grados_cursado %}
+                    <option value="{{ grado }}" {% if grado_actual == grado %}selected{% endif %}>{{ grado }}</option>
+                    {% endfor %}
+                </select>
+                <label for="seccion">Sección asignada:</label>
+                <select id="seccion" name="seccion" required>
+                    <option value="">-- Seleccione la sección --</option>
+                    {% for seccion in secciones %}
+                    <option value="{{ seccion }}" {% if seccion_actual == seccion %}selected{% endif %}>Sección {{ seccion }}</option>
+                    {% endfor %}
+                </select>
+                {% else %}
+                <label for="valor">{{ etiqueta }}:</label><br>
+                <input type="text" id="valor" name="valor" value="{{ valor }}"
+                       {% if requerido %}required{% endif %}
+                       {% if campo in ['cedula', 'repMadre_cedula', 'repPadre_cedula'] %}inputmode="text" pattern="[Vv][0-9]+" placeholder="Ej. V319458534" title="Ingrese la letra V seguida de números."{% endif %}
+                       autofocus>
+                {% endif %}
+            </fieldset>
+            <br>
+            <div style="text-align: center; display: flex; gap: 15px; justify-content: center;">
+                <button type="submit" style="padding: 10px 20px; font-size: 16px; background-color: #27ae60; width: auto;">Guardar cambio</button>
+                <a href="{{ url_for('ficha_estudiante', id=ins.id) }}" style="padding: 10px 20px; font-size: 16px; background-color: #7f8c8d; color: white; text-decoration: none; border-radius: 4px; font-weight: bold; line-height: 20px;">Cancelar</a>
+            </div>
+        </form>
+    </main>
+</body>
+</html>

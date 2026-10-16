@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Conexión al Sistema - E.B.N. Gen. Rafael Urdaneta</title>
+    <title>Conexión al sistema - E.B.N. Gen. Rafael Urdaneta</title>
     
     <!-- ESTILOS INTERNOS INTEGRADOS PARA EVITAR FALLOS EN WEBCODE -->
     <style>
@@ -154,15 +154,38 @@
             border-top: 1px solid #eeeeee;
             padding-top: 15px;
         }
+
+        .boton-refrescar {
+            position: fixed;
+            top: 18px;
+            right: 18px;
+            width: auto;
+            margin: 0;
+            padding: 7px 10px;
+            border: 0;
+            border-radius: 4px;
+            color: #ffcc00;
+            background-color: #1a4a75;
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .boton-refrescar:hover {
+            background-color: #123452;
+        }
     </style>
 </head>
 <body class="cuerpo-login">
+
+    {% include '_boton_refrescar.html' %}
 
     <div class="contenedor-login">
         <!-- Icono de desarrollo técnico -->
         <div class="logo-sistema-simbolo">&lt;/&gt;</div>
         
-        <h2>SISTEMA CONTROL DE MATRÍCULA</h2>
+        <h2>Sistema de control de matrícula</h2>
         <p class="subtitulo-colegio">E.B.N. General Rafael Urdaneta</p>
 
         <!-- Formulario con envío POST y validación -->
@@ -179,24 +202,24 @@
         <form class="formulario-login" method="POST" action="{{ url_for('login') }}" onsubmit="validarAcceso(event)">
             
             <div class="grupo-entrada">
-                <label for="usuario">Identificador del Administrador / Usuario</label>
+                <label for="usuario">Identificador del administrador o usuario</label>
                 <input type="text" id="usuario" name="usuario" placeholder="ejemplo: admin_urdaneta" required autocomplete="off">
             </div>
 
             <div class="grupo-entrada">
-                <label for="clave">Clave de Acceso (Token de Seguridad)</label>
+                <label for="clave">Clave de acceso (token de seguridad)</label>
                 <input type="password" id="clave" name="password" placeholder="••••••••••••" required>
             </div>
 
             <div class="indicador-entorno">
-                <span class="punto-verde"></span> Entorno Local Activo (Base de Datos Conectada)
+                <span class="punto-verde"></span> Entorno local activo (base de datos conectada)
             </div>
 
-            <button type="submit" class="btn-ingresar-sistema">Inicializar Sistema</button>
+            <button type="submit" class="btn-ingresar-sistema">Inicializar sistema</button>
         </form>
 
         <div class="login-pie">
-            <p>Detección automática: Modo Demostración Académica Activo</p>
+            <p>Detección automática: modo de demostración académica activo</p>
         </div>
     </div>
 
