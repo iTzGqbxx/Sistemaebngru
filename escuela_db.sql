@@ -33,10 +33,12 @@ CREATE TABLE `inscripciones` (
   `apellido` text NOT NULL,
   `ano_cursado` text NOT NULL,
   `cedula` text NOT NULL,
-  `rep_nombre` text NOT NULL,
-  `rep_apellido` text NOT NULL,
-  `rep_correo` text NOT NULL,
-  `rep_telefono` text NOT NULL
+  `repMadre_nombre` text NOT NULL,
+  `repMadre_apellido` text NOT NULL,
+  `repMadre_cedula` text NOT NULL,
+  `repPadre_nombre` text NOT NULL,
+  `repPadre_apellido` text NOT NULL,
+  `repPadre_cedula` text NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
 --
@@ -92,6 +94,17 @@ CREATE TABLE IF NOT EXISTS `usuarios` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+UPDATE `usuarios` AS usuario_anterior
+LEFT JOIN `usuarios` AS usuario_nuevo
+  ON usuario_nuevo.`usuario` = 'administracion'
+SET usuario_anterior.`usuario` = 'administracion'
+WHERE usuario_anterior.`usuario` = 'administracionGRU'
+  AND usuario_nuevo.`id` IS NULL;
+
+UPDATE `usuarios`
+SET `rol` = 'administracionGRU'
+WHERE `usuario` = 'administracion';
+
 --
 -- Volcado de datos para la tabla `usuarios`
 --
@@ -99,7 +112,7 @@ CREATE TABLE IF NOT EXISTS `usuarios` (
 INSERT INTO `usuarios` (`usuario`, `password`, `rol`) VALUES
 ('desarrollador', 'developerGRU', 'desarrollador'),
 ('directoraGRU', 'directoraEBNGRU', 'directora'),
-('administracionGRU', 'EBNGRU', 'administracion')
+('administracion', 'EBNGRU', 'administracionGRU')
 ON DUPLICATE KEY UPDATE `password` = VALUES(`password`), `rol` = VALUES(`rol`);
 
 COMMIT;

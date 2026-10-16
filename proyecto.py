@@ -1,4 +1,5 @@
 import sys
+import re
 from pathlib import Path
 from uuid import uuid4
 
@@ -17,16 +18,47 @@ app = Flask(__name__)
 app.secret_key = 'EBNGRU_secret_key_super_secure'
 app.config['MAX_CONTENT_LENGTH'] = 32 * 1024 * 1024
 UPLOAD_FOLDER = Path(app.instance_path) / 'uploads'
+USUARIOS_GESTION_EXPEDIENTES = {'desarrollador', 'directora', 'directoraGRU'}
+ROLES_ADMINISTRACION = {'administracion', 'administrador', 'administracionGRU'}
+GRADOS_CURSADO = ('1er Grado', '2do Grado', '3er Grado', '4to Grado', '5to Grado')
+SECCIONES = ('A', 'B', 'C', 'D')
+CAMPOS_EDITABLES = {
+    'cedula': ('cedula', 'Cédula estudiantil', True),
+    'nombre': ('nombre', 'Nombres del estudiante', True),
+    'apellido': ('apellido', 'Apellidos del estudiante', True),
+    'ano_cursado': ('ano_cursado', 'Grado y sección actuales', True),
+    'repMadre_nombre': ('repMadre_nombre', 'Nombres de la madre', True),
+    'repMadre_apellido': ('repMadre_apellido', 'Apellidos de la madre', True),
+    'repMadre_cedula': ('repMadre_cedula', 'Cédula de la madre', True),
+    'repPadre_nombre': ('repPadre_nombre', 'Nombres del padre', False),
+    'repPadre_apellido': ('repPadre_apellido', 'Apellidos del padre', False),
+    'repPadre_cedula': ('repPadre_cedula', 'Cédula del padre', False),
+}
 
 ARCHIVOS_INSCRIPCION = {
     'doc_partida_nacimiento': ('Partida de nacimiento del estudiante', {'.pdf', '.jpg', '.jpeg', '.png', '.webp'}),
-    'doc_cedula_estudiante': ('Copia de cédula del estudiante', {'.pdf', '.jpg', '.jpeg', '.png', '.webp'}),
+    'doc_cedula_estudiante': ('Copia de cédula del estudiante (de disponer una propia)', {'.pdf', '.jpg', '.jpeg', '.png', '.webp'}),
     'doc_carton_vacunas': ('Copia de cartón de vacunas', {'.pdf', '.jpg', '.jpeg', '.png', '.webp'}),
     'doc_cedula_representante': ('Copia de cédula del representante', {'.pdf', '.jpg', '.jpeg', '.png', '.webp'}),
     'doc_rif_representante': ('Copia del RIF actualizado', {'.pdf', '.jpg', '.jpeg', '.png', '.webp'}),
     'foto_estudiante': ('Foto tipo carnet del estudiante', {'.jpg', '.jpeg', '.png', '.webp'}),
     'foto_representante': ('Foto tipo carnet del representante', {'.jpg', '.jpeg', '.png', '.webp'}),
 }
+
+
+def puede_gestionar_expedientes():
+    return session.get('usuario') in USUARIOS_GESTION_EXPEDIENTES
+
+
+def puede_editar_expedientes():
+    return puede_gestionar_expedientes() or session.get('rol') in ROLES_ADMINISTRACION
+
+
+def separar_ubicacion_academica(valor):
+    partes = valor.split(' - Sección ', 1)
+    if len(partes) == 2 and partes[0] in GRADOS_CURSADO and partes[1] in SECCIONES:
+        return partes
+    return '', ''
 
 
 def asegurar_tabla_archivos(cursor):
@@ -53,6 +85,9 @@ def archivo_demasiado_grande(error):
     if request.endpoint == 'inscripcion' and 'usuario' in session:
         flash('Los archivos adjuntos superan el límite total de 32 MB.', 'error')
         return redirect(url_for('inscripcion'))
+    if request.endpoint == 'editar_archivos_inscripcion' and 'usuario' in session:
+        flash('Los archivos adjuntos superan el límite total de 32 MB.', 'error')
+        return redirect(url_for('editar_archivos_inscripcion', id=request.view_args['id']))
     return error
 
 
@@ -138,53 +173,138 @@ def logout():
 def dashboard():
     if 'usuario' not in session:
         return redirect(url_for('login'))
-    return render_template('dashboard.html')
+    puede_gestionar = puede_gestionar_expedientes()
+    mostrar_boton_eliminar = puede_gestionar or session.get('rol') in {
+        'administracion',
+        'administrador',
+        'administracionGRU'
+    }
+    return render_template(
+        'dashboard.html',
+        puede_gestionar_expedientes=puede_gestionar,
+        puede_editar_expedientes=puede_editar_expedientes(),
+        mostrar_boton_eliminar=mostrar_boton_eliminar
+    )
+
+@app.route('/eliminar_estudiante')
+def seleccionar_estudiante_eliminar():
+    if 'usuario' not in session:
+        return redirect(url_for('login'))
+    if not puede_gestionar_expedientes():
+        abort(403)
+
+    conn = db_connection.get_connection()
+    c = conn.cursor(dictionary=True)
+    c.execute(
+        'SELECT id, nombre, apellido, ano_cursado FROM inscripciones '
+        'ORDER BY ano_cursado, apellido, nombre'
+    )
+    inscripciones = c.fetchall()
+    conn.close()
+    return render_template('eliminar_estudiante.html', inscripciones=inscripciones)
 
 @app.route('/editar_inscripcion/<int:id>', methods=['GET', 'POST'])
 def editar_inscripcion(id):
     if 'usuario' not in session:
         return redirect(url_for('login'))
-        
-    rol = session.get('rol')
-    if rol == 'administracion':
-        flash('Acceso denegado: El personal de administración solo tiene permisos para registrar estudiantes, no para modificarlos.', 'error')
-        return redirect(url_for('ver_datos'))
-        
+
+    if not puede_editar_expedientes():
+        abort(403)
+
+    campo = request.args.get('campo')
+    if campo not in CAMPOS_EDITABLES:
+        abort(404)
+
     conn = db_connection.get_connection()
     c = conn.cursor(dictionary=True)
     c.execute('SELECT * FROM inscripciones WHERE id = %s', (id,))
     ins = c.fetchone()
     conn.close()
-    
+
     if not ins:
         flash('Inscripción no encontrada.', 'error')
         return redirect(url_for('ver_datos'))
-        
+
+    columna, etiqueta, requerido = CAMPOS_EDITABLES[campo]
+    grado_actual, seccion_actual = separar_ubicacion_academica(ins[columna] or '')
     if request.method == 'POST':
-        nombre = request.form['nombre']
-        apellido = request.form['apellido']
-        cedula = request.form['cedula']
-        ano_cursado = request.form['ano_cursado']
-        rep_nombre = request.form['rep_nombre']
-        rep_correo = request.form['rep_correo']
-        rep_apellido = request.form.get('rep_apellido', 'No registrado')
-        rep_telefono = request.form.get('rep_telefono', 'No registrado')
-        
+        if campo == 'ano_cursado':
+            grado = request.form.get('grado', '')
+            seccion = request.form.get('seccion', '')
+            if grado not in GRADOS_CURSADO or seccion not in SECCIONES:
+                flash('Seleccione un grado y una sección válidos.', 'error')
+                return render_template(
+                    'editar_campo.html',
+                    ins=ins,
+                    campo=campo,
+                    etiqueta=etiqueta,
+                    valor=ins[columna],
+                    requerido=requerido,
+                    grados_cursado=GRADOS_CURSADO,
+                    secciones=SECCIONES,
+                    grado_actual=grado if grado in GRADOS_CURSADO else grado_actual,
+                    seccion_actual=seccion if seccion in SECCIONES else seccion_actual
+                )
+            valor = f'{grado} - Sección {seccion}'
+        else:
+            valor = request.form.get('valor', '').strip()
+        es_cedula = columna in {'cedula', 'repMadre_cedula', 'repPadre_cedula'}
+        if requerido and not valor:
+            flash(f'El campo "{etiqueta}" no puede quedar vacío.', 'error')
+            return render_template(
+                'editar_campo.html',
+                ins=ins,
+                campo=campo,
+                etiqueta=etiqueta,
+                valor=ins[columna],
+                requerido=requerido,
+                grados_cursado=GRADOS_CURSADO,
+                secciones=SECCIONES,
+                grado_actual=grado_actual,
+                seccion_actual=seccion_actual
+            )
+        if es_cedula and valor and not re.fullmatch(r'V[0-9]+', valor.upper()):
+            flash(f'Ingrese una cédula válida en el campo "{etiqueta}" (por ejemplo, V319458534).', 'error')
+            return render_template(
+                'editar_campo.html',
+                ins=ins,
+                campo=campo,
+                etiqueta=etiqueta,
+                valor=valor.upper(),
+                requerido=requerido,
+                grados_cursado=GRADOS_CURSADO,
+                secciones=SECCIONES,
+                grado_actual=grado_actual,
+                seccion_actual=seccion_actual
+            )
+        if es_cedula and valor:
+            valor = valor.upper()
+        if not requerido and not valor:
+            valor = 'No registrado'
+
         conn = db_connection.get_connection()
         c = conn.cursor()
-        c.execute('''
-            UPDATE inscripciones 
-            SET nombre = %s, apellido = %s, cedula = %s, ano_cursado = %s,
-                rep_nombre = %s, rep_correo = %s, rep_apellido = %s, rep_telefono = %s
-            WHERE id = %s
-        ''', (nombre, apellido, cedula, ano_cursado, rep_nombre, rep_correo, rep_apellido, rep_telefono, id))
+        c.execute(
+            f'UPDATE inscripciones SET {columna} = %s WHERE id = %s',
+            (valor, id)
+        )
         conn.commit()
         conn.close()
-        
-        flash('Inscripción de estudiante actualizada con éxito.', 'success')
-        return redirect(url_for('ver_datos'))
-        
-    return render_template('editar_inscripcion.html', ins=ins)
+        flash(f'{etiqueta} actualizado correctamente.', 'success')
+        return redirect(url_for('ficha_estudiante', id=id))
+
+    return render_template(
+        'editar_campo.html',
+        ins=ins,
+        campo=campo,
+        etiqueta=etiqueta,
+        valor=ins[columna],
+        requerido=requerido,
+        grados_cursado=GRADOS_CURSADO,
+        secciones=SECCIONES,
+        grado_actual=grado_actual,
+        seccion_actual=seccion_actual
+    )
 
 @app.route('/estudiante/<int:id>')
 def ficha_estudiante(id):
@@ -217,7 +337,9 @@ def ficha_estudiante(id):
         'ficha_estudiante.html',
         estudiante=estudiante,
         archivos=archivos_estudiante,
-        foto_estudiante=foto_estudiante
+        foto_estudiante=foto_estudiante,
+        puede_gestionar_expedientes=puede_gestionar_expedientes(),
+        puede_editar_expedientes=puede_editar_expedientes()
     )
 
 @app.route('/archivo_inscripcion/<int:id>')
@@ -242,15 +364,171 @@ def ver_archivo_inscripcion(id):
         download_name=archivo['nombre_original']
     )
 
-@app.route('/eliminar_inscripcion/<int:id>')
+@app.route('/eliminar_archivo_inscripcion/<int:id>', methods=['POST'])
+def eliminar_archivo_inscripcion(id):
+    if 'usuario' not in session:
+        return redirect(url_for('login'))
+    if not puede_editar_expedientes():
+        abort(403)
+
+    conn = db_connection.get_connection()
+    try:
+        c = conn.cursor(dictionary=True)
+        asegurar_tabla_archivos(c)
+        c.execute(
+            'SELECT inscripcion_id, nombre_archivo, tipo FROM archivos_inscripcion WHERE id = %s',
+            (id,)
+        )
+        archivo = c.fetchone()
+        if not archivo:
+            abort(404)
+
+        nombre_archivo = Path(archivo['nombre_archivo'])
+        if nombre_archivo.name != archivo['nombre_archivo']:
+            app.logger.error('Nombre de archivo adjunto no válido en el registro %s.', id)
+            abort(400)
+
+        c.execute('DELETE FROM archivos_inscripcion WHERE id = %s', (id,))
+        conn.commit()
+    except Error:
+        conn.rollback()
+        app.logger.exception('No se pudo eliminar el registro del archivo adjunto %s.', id)
+        flash('No se pudo quitar el archivo del expediente. Inténtelo nuevamente.', 'error')
+        return redirect(url_for('ver_datos'))
+    finally:
+        conn.close()
+
+    try:
+        (UPLOAD_FOLDER / nombre_archivo).unlink(missing_ok=True)
+    except OSError:
+        app.logger.exception('No se pudo eliminar el archivo adjunto %s', nombre_archivo)
+        flash('Se quitó el archivo del expediente, pero no se pudo eliminar el archivo almacenado.', 'error')
+        return redirect(url_for('ficha_estudiante', id=archivo['inscripcion_id']))
+
+    flash(f'Se quitó "{archivo["tipo"]}" del expediente.', 'success')
+    return redirect(url_for('ficha_estudiante', id=archivo['inscripcion_id']))
+
+@app.route('/editar_archivos_inscripcion/<int:id>', methods=['GET', 'POST'])
+def editar_archivos_inscripcion(id):
+    if 'usuario' not in session:
+        return redirect(url_for('login'))
+    if not puede_editar_expedientes():
+        abort(403)
+
+    conn = db_connection.get_connection()
+    c = conn.cursor(dictionary=True)
+    c.execute('SELECT id, nombre, apellido FROM inscripciones WHERE id = %s', (id,))
+    estudiante = c.fetchone()
+    if not estudiante:
+        conn.close()
+        flash('Inscripción no encontrada.', 'error')
+        return redirect(url_for('ver_datos'))
+
+    asegurar_tabla_archivos(c)
+    c.execute(
+        'SELECT id, tipo, nombre_archivo, nombre_original FROM archivos_inscripcion '
+        'WHERE inscripcion_id = %s ORDER BY id DESC',
+        (id,)
+    )
+    archivos = c.fetchall()
+    conn.close()
+
+    tipos_anteriores = {
+        'Copia de cédula del estudiante': 'Copia de cédula del estudiante (de disponer una propia)'
+    }
+    archivos_por_tipo = {}
+    tipos_actuales = {tipo for tipo, _ in ARCHIVOS_INSCRIPCION.values()}
+    for archivo in archivos:
+        tipo = archivo['tipo']
+        tipo_canonico = tipos_anteriores.get(tipo, tipo)
+        if tipo_canonico in tipos_actuales and tipo_canonico not in archivos_por_tipo:
+            archivos_por_tipo[tipo_canonico] = archivo
+
+    if request.method == 'POST':
+        archivos_subidos = []
+        for campo, (tipo, extensiones_permitidas) in ARCHIVOS_INSCRIPCION.items():
+            archivo = request.files.get(campo)
+            if not archivo or not archivo.filename:
+                continue
+
+            nombre_original = secure_filename(archivo.filename)
+            extension = Path(nombre_original).suffix.lower()
+            if not nombre_original or extension not in extensiones_permitidas:
+                flash(f'El archivo seleccionado para "{tipo}" tiene un formato no permitido.', 'error')
+                return redirect(url_for('editar_archivos_inscripcion', id=id))
+            archivos_subidos.append((archivo, tipo, nombre_original, extension))
+
+        if not archivos_subidos:
+            flash('Seleccione al menos un archivo para agregar o reemplazar.', 'error')
+            return redirect(url_for('editar_archivos_inscripcion', id=id))
+
+        rutas_nuevas = []
+        rutas_reemplazadas = []
+        conn = None
+        try:
+            UPLOAD_FOLDER.mkdir(parents=True, exist_ok=True)
+            conn = db_connection.get_connection()
+            c = conn.cursor()
+            asegurar_tabla_archivos(c)
+            for archivo, tipo, nombre_original, extension in archivos_subidos:
+                nombre_guardado = f'{uuid4().hex}{extension}'
+                ruta_guardada = UPLOAD_FOLDER / nombre_guardado
+                rutas_nuevas.append(ruta_guardada)
+                archivo.save(ruta_guardada)
+
+                archivo_existente = archivos_por_tipo.get(tipo)
+                if archivo_existente:
+                    c.execute(
+                        'UPDATE archivos_inscripcion SET tipo = %s, nombre_archivo = %s, '
+                        'nombre_original = %s, extension = %s WHERE id = %s',
+                        (tipo, nombre_guardado, nombre_original, extension, archivo_existente['id'])
+                    )
+                    rutas_reemplazadas.append(UPLOAD_FOLDER / archivo_existente['nombre_archivo'])
+                else:
+                    c.execute(
+                        'INSERT INTO archivos_inscripcion '
+                        '(inscripcion_id, tipo, nombre_archivo, nombre_original, extension) '
+                        'VALUES (%s, %s, %s, %s, %s)',
+                        (id, tipo, nombre_guardado, nombre_original, extension)
+                    )
+            conn.commit()
+        except (OSError, Error):
+            if conn:
+                conn.rollback()
+            for ruta in rutas_nuevas:
+                try:
+                    ruta.unlink(missing_ok=True)
+                except OSError:
+                    app.logger.exception('No se pudo limpiar el archivo adjunto %s', ruta)
+            app.logger.exception('No se pudieron actualizar los archivos del expediente %s.', id)
+            flash('No se pudieron guardar los archivos. Inténtelo nuevamente.', 'error')
+            return redirect(url_for('editar_archivos_inscripcion', id=id))
+        finally:
+            if conn:
+                conn.close()
+
+        for ruta in rutas_reemplazadas:
+            try:
+                ruta.unlink(missing_ok=True)
+            except OSError:
+                app.logger.exception('No se pudo retirar el archivo adjunto reemplazado %s', ruta)
+        flash('Los archivos del expediente se actualizaron correctamente.', 'success')
+        return redirect(url_for('ficha_estudiante', id=id))
+
+    return render_template(
+        'editar_archivos.html',
+        estudiante=estudiante,
+        archivos_por_tipo=archivos_por_tipo,
+        archivos_inscripcion=ARCHIVOS_INSCRIPCION
+    )
+
+@app.route('/eliminar_inscripcion/<int:id>', methods=['POST'])
 def eliminar_inscripcion(id):
     if 'usuario' not in session:
         return redirect(url_for('login'))
         
-    rol = session.get('rol')
-    if rol not in ['desarrollador', 'directora']:
-        flash('Acceso denegado: El personal de administración no tiene permisos para eliminar registros.', 'error')
-        return redirect(url_for('ver_datos'))
+    if not puede_gestionar_expedientes():
+        abort(403)
         
     conn = db_connection.get_connection()
     c = conn.cursor()
@@ -269,7 +547,7 @@ def eliminar_inscripcion(id):
             app.logger.exception('No se pudo eliminar el archivo adjunto %s', ruta_archivo)
     
     flash('Inscripción eliminada correctamente.', 'success')
-    return redirect(url_for('ver_datos'))
+    return redirect(url_for('seleccionar_estudiante_eliminar'))
 
 @app.route('/inscripcion', methods=['GET', 'POST'])
 def inscripcion():
@@ -277,6 +555,17 @@ def inscripcion():
         return redirect(url_for('login'))
         
     if request.method == 'POST':
+        campos_cedula = (
+            ('cedula_estudiantil', 'la cédula del estudiante', True),
+            ('repMadre_cedula', 'la cédula de la madre', True),
+            ('repPadre_cedula', 'la cédula del padre', False),
+        )
+        for campo, etiqueta, requerido in campos_cedula:
+            valor = request.form.get(campo, '').strip()
+            if (requerido and not valor) or (valor and not re.fullmatch(r'V[0-9]+', valor.upper())):
+                flash(f'Ingrese una cédula válida en {etiqueta} (por ejemplo, V319458534).', 'error')
+                return redirect(url_for('inscripcion'))
+
         archivos_subidos = []
         for campo, (tipo, extensiones_permitidas) in ARCHIVOS_INSCRIPCION.items():
             archivo = request.files.get(campo)
@@ -306,11 +595,13 @@ def inscripcion():
         seccion = request.form['seccion']
         ano_cursado = f"{grado_str} - Sección {seccion}"
         
-        cedula = request.form['cedula_estudiantil']
-        rep_nombre = request.form['nombre_madre']
-        rep_apellido = request.form.get('nombre_padre', 'No registrado')
-        rep_correo = request.form['cedula_madre']
-        rep_telefono = request.form.get('cedula_padre', 'No registrado')
+        cedula = request.form['cedula_estudiantil'].strip().upper()
+        rep_madre_nombre = request.form['repMadre_nombre'].strip()
+        rep_madre_apellido = request.form['repMadre_apellido'].strip()
+        rep_madre_cedula = request.form['repMadre_cedula'].strip().upper()
+        rep_padre_nombre = request.form.get('repPadre_nombre', '').strip() or 'No registrado'
+        rep_padre_apellido = request.form.get('repPadre_apellido', '').strip() or 'No registrado'
+        rep_padre_cedula = request.form.get('repPadre_cedula', '').strip().upper() or 'No registrado'
         
         rutas_guardadas = []
         conn = None
@@ -321,9 +612,14 @@ def inscripcion():
             asegurar_tabla_archivos(c)
             c.execute('''
                 INSERT INTO inscripciones
-                (nombre, apellido, ano_cursado, cedula, rep_nombre, rep_apellido, rep_correo, rep_telefono)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-            ''', (nombres_est, apellidos_est, ano_cursado, cedula, rep_nombre, rep_apellido, rep_correo, rep_telefono))
+                (nombre, apellido, ano_cursado, cedula, repMadre_nombre, repMadre_apellido,
+                 repMadre_cedula, repPadre_nombre, repPadre_apellido, repPadre_cedula)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            ''', (
+                nombres_est, apellidos_est, ano_cursado, cedula, rep_madre_nombre,
+                rep_madre_apellido, rep_madre_cedula, rep_padre_nombre,
+                rep_padre_apellido, rep_padre_cedula
+            ))
             inscripcion_id = c.lastrowid
 
             for archivo, tipo, nombre_original, extension in archivos_subidos:
@@ -402,13 +698,13 @@ def ver_datos():
 if __name__ == '__main__':
     try:
         test_conn = db_connection.get_connection()
-        print("[OK] Conexion con MySQL establecida correctamente.")
+        print("[OK] Conexión con MySQL establecida correctamente.")
     except Exception as e:
         print("\n" + "=" * 65)
         print(f"[ERROR] Error al conectar a MySQL: {e}")
         print("Por favor, verifica lo siguiente:")
         print("1. Abre el panel de XAMPP e inicia el servicio MySQL (Start).")
-        print("2. Asegurate de tener la base de datos 'escuela_ebngru' o 'escuela_db'.")
+        print("2. Asegúrate de tener la base de datos 'escuela_ebngru' o 'escuela_db'.")
         print("=" * 65)
         try:
             input("\nPresiona Enter para salir...")
