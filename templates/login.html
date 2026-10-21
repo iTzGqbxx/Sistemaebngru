@@ -32,13 +32,12 @@
             text-align: center;
         }
 
-        /* Símbolo de programación superior */
-        .logo-sistema-simbolo {
-            font-size: 28px;
-            color: #1a4a75;
-            font-family: 'Courier New', Courier, monospace;
-            font-weight: bold;
-            margin-bottom: 8px;
+        .logo-institucional {
+            display: block;
+            width: 88px;
+            height: 88px;
+            object-fit: contain;
+            margin: 0 auto 8px;
         }
 
         /* Título Principal */
@@ -182,8 +181,10 @@
     {% include '_boton_refrescar.html' %}
 
     <div class="contenedor-login">
-        <!-- Icono de desarrollo técnico -->
-        <div class="logo-sistema-simbolo">&lt;/&gt;</div>
+        <!-- Logo institucional -->
+        <img class="logo-institucional"
+             src="{{ url_for('static', filename='images/logo-escuela.png') }}"
+             alt="Logo de la Escuela Básica Nacional General Rafael Urdaneta">
         
         <h2>Sistema de control de matrícula</h2>
         <p class="subtitulo-colegio">E.B.N. General Rafael Urdaneta</p>
@@ -202,17 +203,13 @@
         <form class="formulario-login" method="POST" action="{{ url_for('login') }}" onsubmit="validarAcceso(event)">
             
             <div class="grupo-entrada">
-                <label for="usuario">Identificador del administrador o usuario</label>
-                <input type="text" id="usuario" name="usuario" placeholder="ejemplo: admin_urdaneta" required autocomplete="off">
+                <label for="usuario">Usuario</label>
+                <input type="text" id="usuario" name="usuario" required autocomplete="off">
             </div>
 
             <div class="grupo-entrada">
-                <label for="clave">Clave de acceso (token de seguridad)</label>
-                <input type="password" id="clave" name="password" placeholder="••••••••••••" required>
-            </div>
-
-            <div class="indicador-entorno">
-                <span class="punto-verde"></span> Entorno local activo (base de datos conectada)
+                <label for="clave">Contraseña</label>
+                <input type="password" id="clave" name="password" required>
             </div>
 
             <button type="submit" class="btn-ingresar-sistema">Inicializar sistema</button>

@@ -1,0 +1,46 @@
+<button class="btn-menu-hamburguesa menu-navegacion-boton" type="button"
+        onclick="alternarBarraLateral()" aria-label="Alternar menú lateral"
+        aria-controls="sidebarMenu" aria-expanded="false" title="Menú">
+    <span></span>
+    <span></span>
+    <span></span>
+</button>
+
+<aside class="barra-lateral escondido menu-lateral-global" id="sidebarMenu">
+    <nav class="menu-navegacion" aria-label="Navegación principal">
+        <a href="{{ url_for('dashboard') }}"
+           class="enlace-nav{% if request.endpoint == 'dashboard' %} activo{% endif %}">Inicio</a>
+        <a href="{{ url_for('inscripcion') }}"
+           class="enlace-nav{% if request.endpoint == 'inscripcion' %} activo{% endif %}">Inscripciones</a>
+        <a href="{{ url_for('ver_datos') }}"
+           class="enlace-nav{% if request.endpoint in ['ver_datos', 'ficha_estudiante', 'editar_inscripcion', 'editar_archivos_inscripcion'] %} activo{% endif %}">Ver registros</a>
+    </nav>
+</aside>
+
+<script>
+    function ajustarPosicionMenu() {
+        var encabezado = document.querySelector("body:not(.cuerpo-dashboard) > header");
+        if (encabezado) {
+            document.body.style.setProperty(
+                "--menu-top",
+                encabezado.getBoundingClientRect().bottom + "px"
+            );
+        }
+    }
+
+    function alternarBarraLateral() {
+        var sidebar = document.getElementById("sidebarMenu");
+        var botonMenu = document.querySelector(".menu-navegacion-boton");
+        var contenido = document.getElementById("contenidoPrincipal");
+        var estaAbierto = sidebar.classList.toggle("escondido") === false;
+
+        if (contenido) {
+            contenido.classList.toggle("expandido", !estaAbierto);
+        }
+        document.body.classList.toggle("menu-abierto", estaAbierto);
+        botonMenu.setAttribute("aria-expanded", String(estaAbierto));
+    }
+
+    document.addEventListener("DOMContentLoaded", ajustarPosicionMenu);
+    window.addEventListener("resize", ajustarPosicionMenu);
+</script>

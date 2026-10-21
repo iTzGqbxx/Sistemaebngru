@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body>
+    {% include '_menu_navegacion.html' %}
+
     <header>
         <h1>Control de Estudios - E.B.N. General Rafael Urdaneta</h1>
         <nav>
@@ -111,8 +113,16 @@
                         <img src="{{ url_for('ver_archivo_inscripcion', id=archivo.id) }}"
                              alt="Vista previa: {{ archivo.tipo }}">
                     </a>
+                    {% elif archivo.extension|lower == '.pdf' %}
+                    <a class="vista-previa-archivo"
+                       href="{{ url_for('ver_archivo_inscripcion', id=archivo.id, vista='miniatura') }}"
+                       target="_blank" rel="noopener">
+                        <img src="{{ url_for('ver_archivo_inscripcion', id=archivo.id, vista='miniatura') }}"
+                             alt="Vista previa de la primera página: {{ archivo.tipo }}"
+                             loading="lazy">
+                    </a>
                     {% else %}
-                    <div class="icono-pdf-archivo" aria-hidden="true">PDF</div>
+                    <div class="icono-pdf-archivo" aria-hidden="true">{{ archivo.extension|upper }}</div>
                     {% endif %}
                     <div class="info-archivo">
                         {% if puede_editar_expedientes %}

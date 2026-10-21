@@ -6,28 +6,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema Escolar - Panel General</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
-    <script>
-        function alternarBarraLateral() {
-            var sidebar = document.getElementById("sidebarMenu");
-            var mainContent = document.getElementById("contenidoPrincipal");
-            sidebar.classList.toggle("escondido");
-            mainContent.classList.toggle("expandido");
-        }
-
-    </script>
 </head>
 
 <body class="cuerpo-dashboard">
+    {% include '_menu_navegacion.html' %}
 
     <!-- ENCABEZADO SUPERIOR AZUL (Fijo) -->
     <header class="encabezado-sistema">
         <div class="info-colegio">
-            <button class="btn-menu-hamburguesa" onclick="alternarBarraLateral()" aria-label="Alternar menú lateral"
-                title="Menú">
-                <span></span>
-                <span></span>
-                <span></span>
-            </button>
             <div class="texto-colegio">
                 <h1>E.B.N. General Rafael Urdaneta</h1>
                 {% if session['rol'] == 'desarrollador' %}
@@ -42,8 +28,6 @@
             </div>
         </div>
         <div class="usuario-logout">
-            {% set fallback_url = url_for('ver_datos') %}
-            {% include '_boton_atras.html' %}
             <div class="avatar-rol avatar-{{ 'administracion' if session.get('rol') in ['administrador', 'administracionGRU'] else session.get('rol', 'administracion') }}"
                 title="Rol: {{ session.get('rol', 'administracion')|capitalize }}">
                 <svg viewBox="0 0 24 24" class="icono-silueta" aria-hidden="true">
@@ -58,15 +42,6 @@
 
     <!-- CONTENEDOR INTERNO DE LA INTERFAZ -->
     <div class="interfaz-contenedor">
-
-        <!-- BARRA LATERAL IZQUIERDA -->
-        <aside class="barra-lateral escondido" id="sidebarMenu">
-            <nav class="menu-navegacion">
-                <a href="{{ url_for('dashboard') }}" class="enlace-nav activo"> Inicio</a>
-                <a href="{{ url_for('inscripcion') }}" class="enlace-nav"> Inscripciones</a>
-                <a href="{{ url_for('ver_datos') }}" class="enlace-nav"> Ver registros</a>
-            </nav>
-        </aside>
 
         <!-- ESPACIO DE TRABAJO PRINCIPAL (LADO DERECHO) -->
         <main class="espacio-trabajo expandido" id="contenidoPrincipal">
