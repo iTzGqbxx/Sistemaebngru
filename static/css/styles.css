@@ -39,6 +39,26 @@ header nav a {
 
 body:not(.cuerpo-dashboard) > header {
     position: relative;
+    box-sizing: border-box;
+    transition: margin-left 0.3s ease, width 0.3s ease;
+}
+
+body:not(.cuerpo-dashboard) > hr,
+body:not(.cuerpo-dashboard) > main {
+    box-sizing: border-box;
+    transition: margin-left 0.3s ease, width 0.3s ease;
+}
+
+body.menu-abierto:not(.cuerpo-dashboard) > header,
+body.menu-abierto:not(.cuerpo-dashboard) > hr,
+body.menu-abierto:not(.cuerpo-dashboard) > main {
+    width: calc(100% - 220px);
+    margin-left: 220px;
+}
+
+body.menu-abierto:not(.cuerpo-dashboard) > header {
+    width: 100%;
+    margin-left: 0;
 }
 
 body:not(.cuerpo-dashboard) > header nav .boton-atras {
@@ -262,8 +282,36 @@ footer {
     border-radius: 2px;
 }
 
+.menu-navegacion-boton {
+    position: fixed;
+    top: 16px;
+    left: 19px;
+    z-index: 1200;
+}
+
+body:not(.cuerpo-dashboard) .menu-navegacion-boton {
+    position: absolute;
+    top: 58px;
+    background-color: #0b3c5d;
+    border-color: rgba(255, 255, 255, 0.55);
+}
+
+body:not(.cuerpo-dashboard) .menu-navegacion-boton:hover {
+    background-color: #1a4a75;
+    border-color: rgba(255, 255, 255, 0.8);
+}
+
 .barra-lateral {
     transition: transform 0.3s ease, min-width 0.3s ease, width 0.3s ease;
+}
+
+.menu-lateral-global {
+    z-index: 1100;
+}
+
+body:not(.cuerpo-dashboard) .menu-lateral-global {
+    top: var(--menu-top, 110px);
+    height: calc(100vh - var(--menu-top, 110px));
 }
 
 .barra-lateral.escondido {
@@ -343,6 +391,7 @@ input[readonly] {
     display: flex;
     align-items: center;
     gap: 15px;
+    padding-left: 53px;
 }
 
 .texto-colegio {
@@ -786,6 +835,10 @@ input[readonly] {
         display: none;
     }
 
+    .info-colegio {
+        padding-left: 48px;
+    }
+
     .usuario-logout {
         gap: 7px;
     }
@@ -1147,7 +1200,7 @@ input[readonly] {
     flex-direction: column;
     gap: 6px;
     min-height: 78px;
-    padding: 12px 132px 12px 12px;
+    padding: 12px;
     box-sizing: border-box;
 }
 
@@ -1170,23 +1223,20 @@ input[readonly] {
 }
 
 .form-quitar-archivo {
-    position: absolute;
-    z-index: 1;
-    top: 12px;
-    right: 12px;
+    align-self: flex-end;
     margin: 0;
 }
 
-.btn-quitar-archivo {
+button[type="submit"].btn-quitar-archivo {
     width: auto;
     margin: 0;
-    padding: 7px 12px;
+    padding: 6px 10px;
     border: 0;
     border-radius: 4px;
     color: #ffffff;
     background-color: #e74c3c;
     font-family: inherit;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: bold;
     cursor: pointer;
 }
