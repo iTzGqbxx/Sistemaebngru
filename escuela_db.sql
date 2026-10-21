@@ -110,9 +110,9 @@ WHERE `usuario` = 'administracion';
 --
 
 INSERT INTO `usuarios` (`usuario`, `password`, `rol`) VALUES
-('desarrollador', 'developerGRU', 'desarrollador'),
-('directoraGRU', 'directoraEBNGRU', 'directora'),
-('administracion', 'EBNGRU', 'administracionGRU')
+('desarrollador', 'scrypt:32768:8:1$JtExvx5ATue7p9Bp$bf3c107f35816660201ae65dc48ea016a32382d80afdf7a5fcc87bcc8daf22a38f96d333827b272b7bb2e082a9ccfa747c80741db9511aab29de182a888b2811', 'desarrollador'),
+('directoraGRU', 'scrypt:32768:8:1$cxx2lyTY7xuYdSJH$964be82cbec552137cb849e4a49d71f608ee7f2a5f6677c3bace8a817bf236cca8eba77f654339d5b0d72a6b65577ad4e1919248ca8de8707c5e0a8bb3ff41de', 'directora'),
+('administracion', 'scrypt:32768:8:1$A4sBGE7eXiDCzSkd$65787172c83b671b3753a0823a735a9b18d21925eb19729fa3650e5df40250aec31d655d4b3b7d28f05ec1c70b2c2bc890373c8a94282a7857ee3f6d7a6a9f9c', 'administracionGRU')
 ON DUPLICATE KEY UPDATE `password` = VALUES(`password`), `rol` = VALUES(`rol`);
 
 COMMIT;

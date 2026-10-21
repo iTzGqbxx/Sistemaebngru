@@ -1,2 +1,3 @@
 Flask
 mysql-connector-python
+PyMuPDF>=1.24,<2

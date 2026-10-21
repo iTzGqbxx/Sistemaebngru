@@ -1,13 +1,18 @@
 import sys
 import re
+import hmac
+from hashlib import sha1, sha256
+from io import BytesIO
 from pathlib import Path
 from uuid import uuid4
 
 import mysql.connector
+import pymupdf
 from mysql.connector import Error
-from flask import Flask, abort, render_template, request, redirect, url_for, session, flash, send_from_directory
+from flask import Flask, abort, render_template, request, redirect, url_for, session, flash, send_file, send_from_directory
 from werkzeug.utils import secure_filename
 from werkzeug.exceptions import RequestEntityTooLarge
+from werkzeug.security import check_password_hash, generate_password_hash
 
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
@@ -52,6 +57,23 @@ def puede_gestionar_expedientes():
 
 def puede_editar_expedientes():
     return puede_gestionar_expedientes() or session.get('rol') in ROLES_ADMINISTRACION
+
+
+def verificar_password(password, password_guardado):
+    if password_guardado.startswith(('scrypt:', 'pbkdf2:')):
+        return check_password_hash(password_guardado, password)
+
+    if re.fullmatch(r'\*[0-9a-fA-F]{40}', password_guardado):
+        password_mysql = '*' + sha1(
+            sha1(password.encode('utf-8')).digest()
+        ).hexdigest().upper()
+        return hmac.compare_digest(password_mysql, password_guardado.upper())
+
+    if re.fullmatch(r'[0-9a-fA-F]{64}', password_guardado):
+        password_sha256 = sha256(password.encode('utf-8')).hexdigest()
+        return hmac.compare_digest(password_sha256, password_guardado.lower())
+
+    return hmac.compare_digest(password_guardado, password)
 
 
 def separar_ubicacion_academica(valor):
@@ -149,12 +171,30 @@ def login():
         password = request.form['password']
         
         conn = db_connection.get_connection()
-        c = conn.cursor(dictionary=True)
-        c.execute('SELECT * FROM usuarios WHERE usuario = %s AND password = %s', (usuario, password))
-        usuario_db = c.fetchone()
-        conn.close()
-        
-        if usuario_db:
+        try:
+            c = conn.cursor(dictionary=True)
+            c.execute(
+                'SELECT id, usuario, password, rol FROM usuarios WHERE usuario = %s',
+                (usuario,)
+            )
+            usuario_db = c.fetchone()
+            autenticado = usuario_db is not None and verificar_password(
+                password,
+                usuario_db['password']
+            )
+
+            if autenticado:
+                password_guardado = usuario_db['password']
+                if not password_guardado.startswith(('scrypt:', 'pbkdf2:')):
+                    c.execute(
+                        'UPDATE usuarios SET password = %s WHERE id = %s',
+                        (generate_password_hash(password), usuario_db['id'])
+                    )
+                    conn.commit()
+        finally:
+            conn.close()
+
+        if autenticado:
             session['usuario'] = usuario_db['usuario']
             session['rol'] = usuario_db['rol']
             return redirect(url_for('dashboard'))
@@ -356,6 +396,32 @@ def ver_archivo_inscripcion(id):
 
     if not archivo:
         abort(404)
+
+    if archivo['extension'].lower() == '.pdf' and request.args.get('vista') == 'miniatura':
+        nombre_archivo = Path(archivo['nombre_archivo'])
+        if nombre_archivo.name != archivo['nombre_archivo']:
+            app.logger.error('Nombre de PDF adjunto no válido en el registro %s.', id)
+            abort(400)
+
+        ruta_archivo = UPLOAD_FOLDER / nombre_archivo
+        if not ruta_archivo.is_file():
+            abort(404)
+
+        try:
+            with pymupdf.open(ruta_archivo) as documento:
+                if documento.page_count == 0:
+                    abort(404)
+                pixmap = documento[0].get_pixmap(
+                    matrix=pymupdf.Matrix(0.8, 0.8),
+                    alpha=False
+                )
+                imagen = BytesIO(pixmap.tobytes('png'))
+        except (pymupdf.FileDataError, pymupdf.EmptyFileError, OSError, RuntimeError):
+            app.logger.exception('No se pudo generar la miniatura del PDF adjunto %s.', id)
+            abort(500)
+
+        imagen.seek(0)
+        return send_file(imagen, mimetype='image/png', max_age=300)
 
     return send_from_directory(
         UPLOAD_FOLDER,
