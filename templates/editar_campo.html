@@ -52,11 +52,25 @@
                     <option value="{{ seccion }}" {% if seccion_actual == seccion %}selected{% endif %}>Sección {{ seccion }}</option>
                     {% endfor %}
                 </select>
+                {% elif campo == 'tutor_parentesco' %}
+                <label for="valor">Parentesco:</label>
+                <select id="valor" name="valor" required autofocus>
+                    <option value="">-- Seleccione --</option>
+                    {% for parentesco in parentescos_representante %}
+                    <option value="{{ parentesco }}" {% if valor == parentesco %}selected{% endif %}>{{ parentesco }}</option>
+                    {% endfor %}
+                </select>
+                <div id="parentesco-otro-contenedor" {% if valor != 'Otro (especificar...)' %}hidden{% endif %}>
+                    <label for="parentesco_otro">Parentesco (especificar...):</label>
+                    <input type="text" id="parentesco_otro" name="parentesco_otro" value="{{ parentesco_otro if parentesco_otro != 'No registrado' else '' }}" {% if valor != 'Otro (especificar...)' %}disabled{% else %}required{% endif %}>
+                </div>
                 {% else %}
                 <label for="valor">{{ etiqueta }}:</label><br>
-                <input type="text" id="valor" name="valor" value="{{ valor }}"
+                <input {% if campo == 'tutor_telefono' %}type="tel" inputmode="numeric"{% elif campo == 'tutor_correo' %}type="email"{% else %}type="text"{% endif %} id="valor" name="valor" value="{{ valor }}"
                        {% if requerido %}required{% endif %}
-                       {% if campo in ['cedula', 'repMadre_cedula', 'repPadre_cedula'] %}inputmode="text" pattern="[Vv][0-9]+" placeholder="Ej. V319458534" title="Ingrese la letra V seguida de números."{% endif %}
+                       {% if campo in ['tutor_cedula', 'tutor2_cedula'] %}inputmode="text" pattern="[Vv][0-9]{8}" maxlength="9" placeholder="Ej. V12345678" title="Ingrese la letra V seguida de exactamente 8 números."
+                       {% elif campo == 'cedula' %}inputmode="text" pattern="[Vv][0-9]+" placeholder="Ej. V319458534" title="Ingrese la letra V seguida de números."
+                       {% elif campo == 'tutor_telefono' %}pattern="[0-9]{4}-[0-9]{7}" maxlength="12" placeholder="Ej. 0412-1234567" title="Ingrese 4 dígitos, un guion y 7 dígitos."{% endif %}
                        autofocus>
                 {% endif %}
             </fieldset>
@@ -67,5 +81,41 @@
             </div>
         </form>
     </main>
+    {% if campo == 'tutor_telefono' %}
+    <script>
+        const telefono = document.getElementById('valor');
+        telefono.addEventListener('input', () => {
+            const numeros = telefono.value.replace(/\D/g, '').slice(0, 11);
+            telefono.value = numeros.length > 4
+                ? `${numeros.slice(0, 4)}-${numeros.slice(4)}`
+                : numeros;
+        });
+    </script>
+    {% endif %}
+    {% if campo == 'tutor_parentesco' %}
+    <script>
+        const parentesco = document.getElementById('valor');
+        const contenedorOtro = document.getElementById('parentesco-otro-contenedor');
+        const campoOtro = document.getElementById('parentesco_otro');
+
+        parentesco.addEventListener('change', () => {
+            const mostrarOtro = parentesco.value === 'Otro (especificar...)';
+            contenedorOtro.hidden = !mostrarOtro;
+            campoOtro.disabled = !mostrarOtro;
+            campoOtro.required = mostrarOtro;
+        });
+    </script>
+    {% endif %}
+    {% if campo in ['cedula', 'tutor_cedula', 'tutor2_cedula'] %}
+    <script>
+        const cedulaRepresentante = document.getElementById('valor');
+        cedulaRepresentante.addEventListener('input', () => {
+            if (!cedulaRepresentante.value) return;
+            const maxDigitos = {{ '8' if campo in ['tutor_cedula', 'tutor2_cedula'] else 'Infinity' }};
+            const numeros = cedulaRepresentante.value.replace(/\D/g, '').slice(0, maxDigitos);
+            cedulaRepresentante.value = `V${numeros}`;
+        });
+    </script>
+    {% endif %}
 </body>
 </html>

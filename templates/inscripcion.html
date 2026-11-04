@@ -84,27 +84,67 @@
             <br>
 
             <fieldset>
-                <legend><strong>3. Información de los padres</strong></legend>
-                <br>
-                <h3>Datos de la madre:</h3>
-                <label for="repMadre_cedula">Cédula de la madre:</label><br>
-                <input type="text" id="repMadre_cedula" name="repMadre_cedula" placeholder="Ej. V319458534" inputmode="text" pattern="[Vv][0-9]+" title="Ingrese la letra V seguida de números." required><br><br>
+                <legend><strong>3. Información del Representante / Tutor o Tutora</strong></legend>
+                <div class="tarjeta-representante">
+                    <h3>Datos del representante:</h3>
+                    <div class="rejilla-representante">
+                        <div class="rep-cedula">
+                            <label for="tutor_cedula">Cédula del representante:</label>
+                            <input type="text" id="tutor_cedula" name="tutor_cedula" placeholder="Ej. V12345678" inputmode="text" pattern="[Vv][0-9]{8}" maxlength="9" title="Ingrese la letra V seguida de exactamente 8 números." required>
+                        </div>
+                        <div class="rep-parentesco">
+                            <label for="tutor_parentesco">Parentesco:</label>
+                            <select id="tutor_parentesco" name="tutor_parentesco" required>
+                                <option value="">-- Seleccione --</option>
+                                <option value="Mamá">Mamá</option>
+                                <option value="Papá">Papá</option>
+                                <option value="Abuela/o">Abuela/o</option>
+                                <option value="Tía/o">Tía/o</option>
+                                <option value="Tutor/a Legal">Tutor/a Legal</option>
+                                <option value="Otro (especificar...)">Otro (especificar...)</option>
+                            </select>
+                        </div>
+                        <div class="rep-nombres">
+                            <label for="tutor_nombre">Nombres del representante:</label>
+                            <input type="text" id="tutor_nombre" name="tutor_nombre" required>
+                        </div>
+                        <div class="rep-apellidos">
+                            <label for="tutor_apellido">Apellidos del representante:</label>
+                            <input type="text" id="tutor_apellido" name="tutor_apellido" required>
+                        </div>
+                        <div class="rep-parentesco-otro" id="rep-parentesco-otro" hidden>
+                            <label for="tutor_parentesco_otro">Parentesco (especificar...):</label>
+                            <input type="text" id="tutor_parentesco_otro" name="tutor_parentesco_otro" placeholder="Especifique el parentesco" disabled>
+                        </div>
+                        <div class="rep-telefono">
+                            <label for="tutor_telefono">Teléfono principal:</label>
+                            <input type="tel" id="tutor_telefono" name="tutor_telefono" placeholder="Ej. 0412-1234567" pattern="[0-9]{4}-[0-9]{7}" maxlength="12" title="Ingrese 4 dígitos, un guion y 7 dígitos (ejemplo: 0412-1234567).">
+                        </div>
+                        <div class="rep-correo">
+                            <label for="tutor_correo">Correo electrónico:</label>
+                            <input type="email" id="tutor_correo" name="tutor_correo">
+                        </div>
+                    </div>
+                    <button type="button" class="btn-agregar-representante" id="btn-agregar-representante">+ Agregar otro representante</button>
+                </div>
 
-                <label for="repMadre_nombre">Nombres de la madre:</label><br>
-                <input type="text" id="repMadre_nombre" name="repMadre_nombre" required><br><br>
-
-                <label for="repMadre_apellido">Apellidos de la madre:</label><br>
-                <input type="text" id="repMadre_apellido" name="repMadre_apellido" required><br><br>
-
-                <h3>Datos del padre:</h3>
-                <label for="repPadre_cedula">Cédula del padre (opcional):</label><br>
-                <input type="text" id="repPadre_cedula" name="repPadre_cedula" placeholder="Ej. V319458534" inputmode="text" pattern="[Vv][0-9]+" title="Ingrese la letra V seguida de números."><br><br>
-
-                <label for="repPadre_nombre">Nombres del padre (opcional):</label><br>
-                <input type="text" id="repPadre_nombre" name="repPadre_nombre"><br><br>
-
-                <label for="repPadre_apellido">Apellidos del padre (opcional):</label><br>
-                <input type="text" id="repPadre_apellido" name="repPadre_apellido"><br><br>
+                <div class="tarjeta-representante" id="representante-2" hidden>
+                    <h3>Datos del representante 2:</h3>
+                    <div class="rejilla-representante representante-secundario">
+                        <div>
+                            <label for="tutor2_cedula">Cédula del representante:</label>
+                            <input type="text" id="tutor2_cedula" name="tutor2_cedula" placeholder="Ej. V12345678" inputmode="text" pattern="[Vv][0-9]{8}" maxlength="9" title="Ingrese la letra V seguida de exactamente 8 números.">
+                        </div>
+                        <div>
+                            <label for="tutor2_nombre">Nombres del representante:</label>
+                            <input type="text" id="tutor2_nombre" name="tutor2_nombre">
+                        </div>
+                        <div>
+                            <label for="tutor2_apellido">Apellidos del representante:</label>
+                            <input type="text" id="tutor2_apellido" name="tutor2_apellido">
+                        </div>
+                    </div>
+                </div>
             </fieldset>
             <br>
 
@@ -157,5 +197,45 @@
         <p style="text-align: center;">2026 Prototipo de sistema de matrícula - E.B.N. General Rafael Urdaneta</p>
     </footer>
 
+    <script>
+        const parentescoSelect = document.getElementById('tutor_parentesco');
+        const parentescoOtro = document.getElementById('rep-parentesco-otro');
+        const parentescoOtroInput = document.getElementById('tutor_parentesco_otro');
+
+        const actualizarParentescoOtro = () => {
+            const requiereEspecificacion = parentescoSelect.value === 'Otro (especificar...)';
+            parentescoOtro.hidden = !requiereEspecificacion;
+            parentescoOtroInput.disabled = !requiereEspecificacion;
+            parentescoOtroInput.required = requiereEspecificacion;
+        };
+
+        parentescoSelect.addEventListener('change', actualizarParentescoOtro);
+        actualizarParentescoOtro();
+
+        const prepararCedulaConPrefijo = (campo, maxDigitos = Infinity) => {
+            campo.addEventListener('input', () => {
+                if (!campo.value) return;
+                const numeros = campo.value.replace(/\D/g, '').slice(0, maxDigitos);
+                campo.value = `V${numeros}`;
+            });
+        };
+
+        prepararCedulaConPrefijo(document.getElementById('cedula_estudiantil'));
+        prepararCedulaConPrefijo(document.getElementById('tutor_cedula'), 8);
+        prepararCedulaConPrefijo(document.getElementById('tutor2_cedula'), 8);
+
+        const telefonoRepresentante = document.getElementById('tutor_telefono');
+        telefonoRepresentante.addEventListener('input', () => {
+            const numeros = telefonoRepresentante.value.replace(/\D/g, '').slice(0, 11);
+            telefonoRepresentante.value = numeros.length > 4
+                ? `${numeros.slice(0, 4)}-${numeros.slice(4)}`
+                : numeros;
+        });
+
+        document.getElementById('btn-agregar-representante').addEventListener('click', (event) => {
+            document.getElementById('representante-2').hidden = false;
+            event.currentTarget.hidden = true;
+        });
+    </script>
 </body>
 </html>
