@@ -131,6 +131,8 @@ legend {
 
 /* 5. CAMPOS DE ENTRADA (INPUTS Y SELECTS) */
 input[type="text"],
+input[type="tel"],
+input[type="email"],
 input[type="file"],
 select {
     width: 100%;
@@ -150,6 +152,105 @@ select {
     color: #596b7a;
     font-size: 13px;
     line-height: 1.5;
+}
+
+.tarjeta-representante {
+    margin: 12px 0;
+    padding: 14px;
+    border: 1px solid #d9e1e8;
+    border-radius: 7px;
+    background-color: #ffffff;
+    box-shadow: 0 2px 5px rgba(26, 74, 117, 0.08);
+}
+
+.tarjeta-representante h3 {
+    margin: 0 0 12px;
+    color: #1a4a75;
+    font-size: 15px;
+}
+
+.rejilla-representante {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px 14px;
+    align-items: end;
+}
+
+.rejilla-representante label {
+    display: block;
+    font-size: 13px;
+}
+
+.rejilla-representante input,
+.rejilla-representante select {
+    margin-bottom: 0;
+}
+
+.rep-cedula {
+    grid-column: 1;
+    grid-row: 1;
+}
+
+.rep-parentesco {
+    grid-column: 2;
+    grid-row: 1;
+}
+
+.rep-nombres {
+    grid-column: 1;
+    grid-row: 2;
+}
+
+.rep-apellidos {
+    grid-column: 1;
+    grid-row: 3;
+}
+
+.rep-parentesco-otro {
+    grid-column: 2;
+    grid-row: 2;
+}
+
+.rep-telefono {
+    grid-column: 3;
+    grid-row: 1;
+}
+
+.rep-correo {
+    grid-column: 3;
+    grid-row: 2;
+}
+
+.btn-agregar-representante {
+    width: auto;
+    margin-top: 12px;
+    padding: 8px 12px;
+    background-color: #1a4a75;
+}
+
+.btn-agregar-representante:hover {
+    background-color: #123858;
+}
+
+.representante-secundario {
+    align-items: start;
+}
+
+@media (max-width: 700px) {
+    .rejilla-representante {
+        grid-template-columns: 1fr;
+    }
+
+    .rep-cedula,
+    .rep-parentesco,
+    .rep-nombres,
+    .rep-apellidos,
+    .rep-parentesco-otro,
+    .rep-telefono,
+    .rep-correo {
+        grid-column: 1;
+        grid-row: auto;
+    }
 }
 
 .rejilla-archivos {
