@@ -33,12 +33,16 @@ CREATE TABLE `inscripciones` (
   `apellido` text NOT NULL,
   `ano_cursado` text NOT NULL,
   `cedula` text NOT NULL,
-  `repMadre_nombre` text NOT NULL,
-  `repMadre_apellido` text NOT NULL,
-  `repMadre_cedula` text NOT NULL,
-  `repPadre_nombre` text NOT NULL,
-  `repPadre_apellido` text NOT NULL,
-  `repPadre_cedula` text NOT NULL
+  `tutor_nombre` varchar(255) NOT NULL DEFAULT 'No registrado',
+  `tutor_apellido` varchar(255) NOT NULL DEFAULT 'No registrado',
+  `tutor_cedula` varchar(30) NOT NULL DEFAULT 'No registrado',
+  `tutor_parentesco` varchar(100) NOT NULL DEFAULT 'No registrado',
+  `tutor_parentesco_otro` varchar(100) NOT NULL DEFAULT 'No registrado',
+  `tutor_telefono` varchar(50) NOT NULL DEFAULT 'No registrado',
+  `tutor_correo` varchar(255) NOT NULL DEFAULT 'No registrado',
+  `tutor2_cedula` varchar(30) NOT NULL DEFAULT 'No registrado',
+  `tutor2_nombre` varchar(255) NOT NULL DEFAULT 'No registrado',
+  `tutor2_apellido` varchar(255) NOT NULL DEFAULT 'No registrado'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
 --

@@ -32,13 +32,25 @@ CAMPOS_EDITABLES = {
     'nombre': ('nombre', 'Nombres del estudiante', True),
     'apellido': ('apellido', 'Apellidos del estudiante', True),
     'ano_cursado': ('ano_cursado', 'Grado y sección actuales', True),
-    'repMadre_nombre': ('repMadre_nombre', 'Nombres de la madre', True),
-    'repMadre_apellido': ('repMadre_apellido', 'Apellidos de la madre', True),
-    'repMadre_cedula': ('repMadre_cedula', 'Cédula de la madre', True),
-    'repPadre_nombre': ('repPadre_nombre', 'Nombres del padre', False),
-    'repPadre_apellido': ('repPadre_apellido', 'Apellidos del padre', False),
-    'repPadre_cedula': ('repPadre_cedula', 'Cédula del padre', False),
+    'tutor_nombre': ('tutor_nombre', 'Nombres del representante 1', True),
+    'tutor_apellido': ('tutor_apellido', 'Apellidos del representante 1', True),
+    'tutor_cedula': ('tutor_cedula', 'Cédula del representante 1', True),
+    'tutor_parentesco': ('tutor_parentesco', 'Parentesco del representante 1', True),
+    'tutor_telefono': ('tutor_telefono', 'Teléfono principal', False),
+    'tutor_correo': ('tutor_correo', 'Correo electrónico', False),
+    'tutor2_nombre': ('tutor2_nombre', 'Nombres del representante 2', False),
+    'tutor2_apellido': ('tutor2_apellido', 'Apellidos del representante 2', False),
+    'tutor2_cedula': ('tutor2_cedula', 'Cédula del representante 2', False),
 }
+
+PARENTESCOS_REPRESENTANTE = (
+    'Mamá',
+    'Papá',
+    'Abuela/o',
+    'Tía/o',
+    'Tutor/a Legal',
+    'Otro (especificar...)',
+)
 
 ARCHIVOS_INSCRIPCION = {
     'doc_partida_nacimiento': ('Partida de nacimiento del estudiante', {'.pdf', '.jpg', '.jpeg', '.png', '.webp'}),
@@ -266,7 +278,11 @@ def editar_inscripcion(id):
         return redirect(url_for('ver_datos'))
 
     columna, etiqueta, requerido = CAMPOS_EDITABLES[campo]
-    grado_actual, seccion_actual = separar_ubicacion_academica(ins[columna] or '')
+    valor_actual = ins[columna] or ''
+    if campo == 'tutor_parentesco' and valor_actual not in PARENTESCOS_REPRESENTANTE:
+        valor_actual = ''
+    parentesco_otro_actual = ins.get('tutor_parentesco_otro', '') or ''
+    grado_actual, seccion_actual = separar_ubicacion_academica(valor_actual)
     if request.method == 'POST':
         if campo == 'ano_cursado':
             grado = request.form.get('grado', '')
@@ -288,7 +304,85 @@ def editar_inscripcion(id):
             valor = f'{grado} - Sección {seccion}'
         else:
             valor = request.form.get('valor', '').strip()
-        es_cedula = columna in {'cedula', 'repMadre_cedula', 'repPadre_cedula'}
+        if campo == 'tutor_parentesco':
+            parentesco_otro = request.form.get('parentesco_otro', '').strip()
+            if valor not in PARENTESCOS_REPRESENTANTE:
+                flash('Seleccione un parentesco válido.', 'error')
+                return render_template(
+                    'editar_campo.html',
+                    ins=ins,
+                    campo=campo,
+                    etiqueta=etiqueta,
+                    valor=valor_actual,
+                    requerido=requerido,
+                    grados_cursado=GRADOS_CURSADO,
+                    secciones=SECCIONES,
+                    grado_actual=grado_actual,
+                    seccion_actual=seccion_actual,
+                    parentescos_representante=PARENTESCOS_REPRESENTANTE,
+                    parentesco_otro=parentesco_otro
+                )
+            if valor == 'Otro (especificar...)' and not parentesco_otro:
+                flash('Especifique el parentesco.', 'error')
+                return render_template(
+                    'editar_campo.html',
+                    ins=ins,
+                    campo=campo,
+                    etiqueta=etiqueta,
+                    valor=valor,
+                    requerido=requerido,
+                    grados_cursado=GRADOS_CURSADO,
+                    secciones=SECCIONES,
+                    grado_actual=grado_actual,
+                    seccion_actual=seccion_actual,
+                    parentescos_representante=PARENTESCOS_REPRESENTANTE,
+                    parentesco_otro=parentesco_otro
+                )
+            conn = db_connection.get_connection()
+            c = conn.cursor()
+            c.execute(
+                'UPDATE inscripciones SET tutor_parentesco = %s, tutor_parentesco_otro = %s WHERE id = %s',
+                (valor, parentesco_otro if valor == 'Otro (especificar...)' else 'No registrado', id)
+            )
+            conn.commit()
+            conn.close()
+            flash(f'{etiqueta} actualizado correctamente.', 'success')
+            return redirect(url_for('ficha_estudiante', id=id))
+        if campo == 'tutor_telefono' and valor and not re.fullmatch(r'[0-9]{4}-[0-9]{7}', valor):
+            flash('El teléfono debe tener el formato 4 dígitos, guion y 7 dígitos (ejemplo: 0412-1234567).', 'error')
+            return render_template(
+                'editar_campo.html',
+                ins=ins,
+                campo=campo,
+                etiqueta=etiqueta,
+                valor=valor,
+                requerido=requerido,
+                grados_cursado=GRADOS_CURSADO,
+                secciones=SECCIONES,
+                grado_actual=grado_actual,
+                seccion_actual=seccion_actual,
+                parentescos_representante=PARENTESCOS_REPRESENTANTE,
+                parentesco_otro=parentesco_otro_actual
+            )
+        if campo == 'tutor_telefono' and not valor:
+            valor = 'No registrado'
+        if campo == 'tutor_correo' and valor and not re.fullmatch(r'[^@\s]+@[^@\s]+\.[^@\s]+', valor):
+            flash('Ingrese un correo electrónico válido.', 'error')
+            return render_template(
+                'editar_campo.html',
+                ins=ins,
+                campo=campo,
+                etiqueta=etiqueta,
+                valor=valor,
+                requerido=requerido,
+                grados_cursado=GRADOS_CURSADO,
+                secciones=SECCIONES,
+                grado_actual=grado_actual,
+                seccion_actual=seccion_actual
+            )
+        if campo == 'tutor_correo' and not valor:
+            valor = 'No registrado'
+        es_cedula = columna in {'cedula', 'tutor_cedula', 'tutor2_cedula'}
         if requerido and not valor:
             flash(f'El campo "{etiqueta}" no puede quedar vacío.', 'error')
             return render_template(
@@ -301,10 +395,18 @@ def editar_inscripcion(id):
                 grados_cursado=GRADOS_CURSADO,
                 secciones=SECCIONES,
                 grado_actual=grado_actual,
-                seccion_actual=seccion_actual
+                seccion_actual=seccion_actual,
+                parentescos_representante=PARENTESCOS_REPRESENTANTE,
+                parentesco_otro=parentesco_otro_actual
             )
-        if es_cedula and valor and not re.fullmatch(r'V[0-9]+', valor.upper()):
-            flash(f'Ingrese una cédula válida en el campo "{etiqueta}" (por ejemplo, V319458534).', 'error')
+        patron_cedula = r'V[0-9]{8}' if columna in {'tutor_cedula', 'tutor2_cedula'} else r'V[0-9]+'
+        if es_cedula and valor and not re.fullmatch(patron_cedula, valor.upper()):
+            mensaje = (
+                'La cédula del representante debe comenzar con V y tener exactamente 8 números.'
+                if columna in {'tutor_cedula', 'tutor2_cedula'}
+                else f'Ingrese una cédula válida en el campo "{etiqueta}" (por ejemplo, V319458534).'
+            )
+            flash(mensaje, 'error')
             return render_template(
                 'editar_campo.html',
                 ins=ins,
@@ -338,12 +440,14 @@ def editar_inscripcion(id):
         ins=ins,
         campo=campo,
         etiqueta=etiqueta,
-        valor=ins[columna],
+        valor=valor_actual,
         requerido=requerido,
         grados_cursado=GRADOS_CURSADO,
         secciones=SECCIONES,
         grado_actual=grado_actual,
-        seccion_actual=seccion_actual
+        seccion_actual=seccion_actual,
+        parentescos_representante=PARENTESCOS_REPRESENTANTE,
+        parentesco_otro=parentesco_otro_actual
     )
 
 @app.route('/estudiante/<int:id>')
@@ -623,14 +727,41 @@ def inscripcion():
     if request.method == 'POST':
         campos_cedula = (
             ('cedula_estudiantil', 'la cédula del estudiante', True),
-            ('repMadre_cedula', 'la cédula de la madre', True),
-            ('repPadre_cedula', 'la cédula del padre', False),
+            ('tutor_cedula', 'la cédula del representante 1', True),
+            ('tutor2_cedula', 'la cédula del representante 2', False),
         )
         for campo, etiqueta, requerido in campos_cedula:
             valor = request.form.get(campo, '').strip()
-            if (requerido and not valor) or (valor and not re.fullmatch(r'V[0-9]+', valor.upper())):
-                flash(f'Ingrese una cédula válida en {etiqueta} (por ejemplo, V319458534).', 'error')
+            patron = r'V[0-9]+' if campo == 'cedula_estudiantil' else r'V[0-9]{8}'
+            if (requerido and not valor) or (valor and not re.fullmatch(patron, valor.upper())):
+                mensaje = (
+                    f'La cédula del representante {1 if campo == "tutor_cedula" else 2} '
+                    'debe comenzar con V y tener exactamente 8 números.'
+                    if campo != 'cedula_estudiantil'
+                    else f'Ingrese una cédula válida en {etiqueta} (por ejemplo, V319458534).'
+                )
+                flash(mensaje, 'error')
                 return redirect(url_for('inscripcion'))
+
+        telefono_representante = request.form.get('tutor_telefono', '').strip()
+        if telefono_representante and not re.fullmatch(r'[0-9]{4}-[0-9]{7}', telefono_representante):
+            flash('El teléfono debe tener el formato 4 dígitos, guion y 7 dígitos (ejemplo: 0412-1234567).', 'error')
+            return redirect(url_for('inscripcion'))
+
+        parentesco = request.form.get('tutor_parentesco', '').strip()
+        parentesco_otro = request.form.get('tutor_parentesco_otro', '').strip()
+        correo_representante = request.form.get('tutor_correo', '').strip()
+        if parentesco not in PARENTESCOS_REPRESENTANTE:
+            flash('Seleccione un parentesco válido para el representante 1.', 'error')
+            return redirect(url_for('inscripcion'))
+        if parentesco == 'Otro (especificar...)' and not parentesco_otro:
+            flash('Especifique el parentesco del representante 1.', 'error')
+            return redirect(url_for('inscripcion'))
+        if parentesco != 'Otro (especificar...)':
+            parentesco_otro = ''
+        if correo_representante and not re.fullmatch(r'[^@\s]+@[^@\s]+\.[^@\s]+', correo_representante):
+            flash('Ingrese un correo electrónico válido para el representante 1.', 'error')
+            return redirect(url_for('inscripcion'))
 
         archivos_subidos = []
         for campo, (tipo, extensiones_permitidas) in ARCHIVOS_INSCRIPCION.items():
@@ -662,12 +793,14 @@ def inscripcion():
         ano_cursado = f"{grado_str} - Sección {seccion}"
         
         cedula = request.form['cedula_estudiantil'].strip().upper()
-        rep_madre_nombre = request.form['repMadre_nombre'].strip()
-        rep_madre_apellido = request.form['repMadre_apellido'].strip()
-        rep_madre_cedula = request.form['repMadre_cedula'].strip().upper()
-        rep_padre_nombre = request.form.get('repPadre_nombre', '').strip() or 'No registrado'
-        rep_padre_apellido = request.form.get('repPadre_apellido', '').strip() or 'No registrado'
-        rep_padre_cedula = request.form.get('repPadre_cedula', '').strip().upper() or 'No registrado'
+        tutor_nombre = request.form['tutor_nombre'].strip()
+        tutor_apellido = request.form['tutor_apellido'].strip()
+        tutor_cedula = request.form['tutor_cedula'].strip().upper()
+        telefono_representante = telefono_representante or 'No registrado'
+        correo_representante = correo_representante or 'No registrado'
+        tutor2_nombre = request.form.get('tutor2_nombre', '').strip() or 'No registrado'
+        tutor2_apellido = request.form.get('tutor2_apellido', '').strip() or 'No registrado'
+        tutor2_cedula = request.form.get('tutor2_cedula', '').strip().upper() or 'No registrado'
         
         rutas_guardadas = []
         conn = None
@@ -678,13 +811,16 @@ def inscripcion():
             asegurar_tabla_archivos(c)
             c.execute('''
                 INSERT INTO inscripciones
-                (nombre, apellido, ano_cursado, cedula, repMadre_nombre, repMadre_apellido,
-                 repMadre_cedula, repPadre_nombre, repPadre_apellido, repPadre_cedula)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                (nombre, apellido, ano_cursado, cedula, tutor_nombre, tutor_apellido,
+                 tutor_cedula, tutor2_nombre, tutor2_apellido, tutor2_cedula,
+                 tutor_parentesco, tutor_parentesco_otro, tutor_telefono, tutor_correo)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             ''', (
-                nombres_est, apellidos_est, ano_cursado, cedula, rep_madre_nombre,
-                rep_madre_apellido, rep_madre_cedula, rep_padre_nombre,
-                rep_padre_apellido, rep_padre_cedula
+                nombres_est, apellidos_est, ano_cursado, cedula, tutor_nombre,
+                tutor_apellido, tutor_cedula, tutor2_nombre,
+                tutor2_apellido, tutor2_cedula, parentesco,
+                parentesco_otro or 'No registrado', telefono_representante,
+                correo_representante
             ))
             inscripcion_id = c.lastrowid
 
