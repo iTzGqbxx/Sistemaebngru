@@ -126,14 +126,6 @@ def archivo_demasiado_grande(error):
 
 
 class DatabaseConnection:
-    _instance = None
-
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super(DatabaseConnection, cls).__new__(cls)
-            cls._instance.connection = None
-        return cls._instance
-
     def _create_connection(self):
         databases_to_try = ["escuela_ebngru", "escuela_db"]
         last_error = None
@@ -155,18 +147,7 @@ class DatabaseConnection:
         raise last_error
 
     def get_connection(self):
-        try:
-            if self.connection is None or not self.connection.is_connected():
-                self.connection = self._create_connection()
-            return self.connection
-        except Exception:
-            self.connection = self._create_connection()
-            return self.connection
-
-    def close_connection(self):
-        if hasattr(self, 'connection') and self.connection and self.connection.is_connected():
-            self.connection.close()
-            self.connection = None
+        return self._create_connection()
 
 db_connection = DatabaseConnection()
 
