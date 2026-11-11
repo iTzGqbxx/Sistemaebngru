@@ -27,6 +27,23 @@ USUARIOS_GESTION_EXPEDIENTES = {'desarrollador', 'directora', 'directoraGRU'}
 ROLES_ADMINISTRACION = {'administracion', 'administrador', 'administracionGRU'}
 GRADOS_CURSADO = ('1er Grado', '2do Grado', '3er Grado', '4to Grado', '5to Grado')
 SECCIONES = ('A', 'B', 'C', 'D')
+COLUMNAS_EXPEDIENTE = (
+    ('id', 'ID'),
+    ('nombre', 'Nombres del estudiante'),
+    ('apellido', 'Apellidos del estudiante'),
+    ('ano_cursado', 'Grado y sección'),
+    ('cedula', 'Cédula estudiantil'),
+    ('tutor_nombre', 'Nombres del representante'),
+    ('tutor_apellido', 'Apellidos del representante'),
+    ('tutor_cedula', 'Cédula del representante'),
+    ('tutor_parentesco', 'Parentesco'),
+    ('tutor_parentesco_otro', 'Otro parentesco'),
+    ('tutor_telefono', 'Teléfono principal'),
+    ('tutor_correo', 'Correo electrónico'),
+    ('tutor2_nombre', 'Nombres del representante 2'),
+    ('tutor2_apellido', 'Apellidos del representante 2'),
+    ('tutor2_cedula', 'Cédula del representante 2'),
+)
 CAMPOS_EDITABLES = {
     'cedula': ('cedula', 'Cédula estudiantil', True),
     'nombre': ('nombre', 'Nombres del estudiante', True),
@@ -212,12 +229,62 @@ def dashboard():
         'administrador',
         'administracionGRU'
     }
+    mostrar_boton_papelera = mostrar_boton_eliminar
     return render_template(
         'dashboard.html',
         puede_gestionar_expedientes=puede_gestionar,
         puede_editar_expedientes=puede_editar_expedientes(),
-        mostrar_boton_eliminar=mostrar_boton_eliminar
+        mostrar_boton_eliminar=mostrar_boton_eliminar,
+        mostrar_boton_papelera=mostrar_boton_papelera
     )
+
+@app.route('/papelera')
+def papelera_estudiantes():
+    if 'usuario' not in session:
+        return redirect(url_for('login'))
+    if not puede_gestionar_expedientes():
+        abort(403)
+
+    conn = db_connection.get_connection()
+    c = conn.cursor(dictionary=True)
+    c.execute(
+        'SELECT id, nombre, apellido, ano_cursado, eliminado_en FROM inscripciones '
+        'WHERE eliminado_en IS NOT NULL ORDER BY eliminado_en DESC, apellido, nombre'
+    )
+    inscripciones = c.fetchall()
+    conn.close()
+    return render_template('papelera.html', inscripciones=inscripciones)
+
+@app.route('/restaurar_inscripcion/<int:id>', methods=['POST'])
+def restaurar_inscripcion(id):
+    if 'usuario' not in session:
+        return redirect(url_for('login'))
+    if not puede_gestionar_expedientes():
+        abort(403)
+
+    conn = db_connection.get_connection()
+    try:
+        c = conn.cursor()
+        c.execute(
+            'UPDATE inscripciones SET eliminado_en = NULL '
+            'WHERE id = %s AND eliminado_en IS NOT NULL',
+            (id,)
+        )
+        if c.rowcount == 0:
+            flash('El estudiante no está en la papelera o ya fue restaurado.', 'error')
+            return redirect(url_for('papelera_estudiantes'))
+        conn.commit()
+    except Error:
+        conn.rollback()
+        app.logger.exception('No se pudo restaurar la inscripción %s.', id)
+        flash('No se pudo restaurar el estudiante. Inténtelo nuevamente.', 'error')
+        return redirect(url_for('papelera_estudiantes'))
+    finally:
+        if conn.is_connected():
+            conn.close()
+
+    flash('Estudiante restaurado correctamente. Su expediente y documentos se conservaron.', 'success')
+    return redirect(url_for('papelera_estudiantes'))
 
 @app.route('/eliminar_estudiante')
 def seleccionar_estudiante_eliminar():
@@ -230,11 +297,15 @@ def seleccionar_estudiante_eliminar():
     c = conn.cursor(dictionary=True)
     c.execute(
         'SELECT id, nombre, apellido, ano_cursado FROM inscripciones '
-        'ORDER BY ano_cursado, apellido, nombre'
+        'WHERE eliminado_en IS NULL ORDER BY ano_cursado, apellido, nombre'
     )
     inscripciones = c.fetchall()
     conn.close()
-    return render_template('eliminar_estudiante.html', inscripciones=inscripciones)
+    return render_template(
+        'eliminar_estudiante.html',
+        inscripciones=inscripciones,
+        puede_gestionar_expedientes=puede_gestionar_expedientes()
+    )
 
 @app.route('/editar_inscripcion/<int:id>', methods=['GET', 'POST'])
 def editar_inscripcion(id):
@@ -250,7 +321,7 @@ def editar_inscripcion(id):
 
     conn = db_connection.get_connection()
     c = conn.cursor(dictionary=True)
-    c.execute('SELECT * FROM inscripciones WHERE id = %s', (id,))
+    c.execute('SELECT * FROM inscripciones WHERE id = %s AND eliminado_en IS NULL', (id,))
     ins = c.fetchone()
     conn.close()
 
@@ -436,10 +507,14 @@ def ficha_estudiante(id):
     if 'usuario' not in session:
         return redirect(url_for('login'))
 
+    es_retirado = request.args.get('retirado') == '1' and puede_gestionar_expedientes()
     conn = db_connection.get_connection()
     c = conn.cursor(dictionary=True)
     asegurar_tabla_archivos(c)
-    c.execute('SELECT * FROM inscripciones WHERE id = %s', (id,))
+    if es_retirado:
+        c.execute('SELECT * FROM inscripciones WHERE id = %s AND eliminado_en IS NOT NULL', (id,))
+    else:
+        c.execute('SELECT * FROM inscripciones WHERE id = %s AND eliminado_en IS NULL', (id,))
     estudiante = c.fetchone()
 
     if not estudiante:
@@ -447,11 +522,14 @@ def ficha_estudiante(id):
         flash('Inscripción no encontrada.', 'error')
         return redirect(url_for('ver_datos'))
 
-    c.execute(
-        'SELECT * FROM archivos_inscripcion WHERE inscripcion_id = %s ORDER BY tipo, creado_en',
-        (id,)
-    )
-    archivos_estudiante = c.fetchall()
+    if es_retirado:
+        archivos_estudiante = []
+    else:
+        c.execute(
+            'SELECT * FROM archivos_inscripcion WHERE inscripcion_id = %s ORDER BY tipo, creado_en',
+            (id,)
+        )
+        archivos_estudiante = c.fetchall()
     conn.close()
 
     foto_estudiante = next(
@@ -463,8 +541,9 @@ def ficha_estudiante(id):
         estudiante=estudiante,
         archivos=archivos_estudiante,
         foto_estudiante=foto_estudiante,
-        puede_gestionar_expedientes=puede_gestionar_expedientes(),
-        puede_editar_expedientes=puede_editar_expedientes()
+        puede_gestionar_expedientes=puede_gestionar_expedientes() and not es_retirado,
+        puede_editar_expedientes=puede_editar_expedientes() and not es_retirado,
+        es_retirado=es_retirado
     )
 
 @app.route('/archivo_inscripcion/<int:id>')
@@ -475,7 +554,13 @@ def ver_archivo_inscripcion(id):
     conn = db_connection.get_connection()
     c = conn.cursor(dictionary=True)
     asegurar_tabla_archivos(c)
-    c.execute('SELECT nombre_archivo, nombre_original, extension FROM archivos_inscripcion WHERE id = %s', (id,))
+    c.execute(
+        'SELECT a.nombre_archivo, a.nombre_original, a.extension '
+        'FROM archivos_inscripcion AS a '
+        'JOIN inscripciones AS i ON i.id = a.inscripcion_id '
+        'WHERE a.id = %s AND i.eliminado_en IS NULL',
+        (id,)
+    )
     archivo = c.fetchone()
     conn.close()
 
@@ -527,7 +612,10 @@ def eliminar_archivo_inscripcion(id):
         c = conn.cursor(dictionary=True)
         asegurar_tabla_archivos(c)
         c.execute(
-            'SELECT inscripcion_id, nombre_archivo, tipo FROM archivos_inscripcion WHERE id = %s',
+            'SELECT a.inscripcion_id, a.nombre_archivo, a.tipo '
+            'FROM archivos_inscripcion AS a '
+            'JOIN inscripciones AS i ON i.id = a.inscripcion_id '
+            'WHERE a.id = %s AND i.eliminado_en IS NULL',
             (id,)
         )
         archivo = c.fetchone()
@@ -568,7 +656,11 @@ def editar_archivos_inscripcion(id):
 
     conn = db_connection.get_connection()
     c = conn.cursor(dictionary=True)
-    c.execute('SELECT id, nombre, apellido FROM inscripciones WHERE id = %s', (id,))
+    c.execute(
+        'SELECT id, nombre, apellido FROM inscripciones '
+        'WHERE id = %s AND eliminado_en IS NULL',
+        (id,)
+    )
     estudiante = c.fetchone()
     if not estudiante:
         conn.close()
@@ -680,24 +772,38 @@ def eliminar_inscripcion(id):
         
     if not puede_gestionar_expedientes():
         abort(403)
+
+    desde_ficha = request.form.get('origen') == 'ficha'
+    destino_error = (
+        url_for('ficha_estudiante', id=id)
+        if desde_ficha
+        else url_for('seleccionar_estudiante_eliminar')
+    )
         
     conn = db_connection.get_connection()
-    c = conn.cursor()
-    asegurar_tabla_archivos(c)
-    c.execute('SELECT nombre_archivo FROM archivos_inscripcion WHERE inscripcion_id = %s', (id,))
-    archivos = c.fetchall()
-    c.execute('DELETE FROM inscripciones WHERE id = %s', (id,))
-    conn.commit()
-    conn.close()
+    try:
+        c = conn.cursor()
+        c.execute(
+            'UPDATE inscripciones SET eliminado_en = CURRENT_TIMESTAMP '
+            'WHERE id = %s AND eliminado_en IS NULL',
+            (id,)
+        )
+        if c.rowcount == 0:
+            flash('El estudiante ya no está en los registros activos.', 'error')
+            return redirect(destino_error)
+        conn.commit()
+    except Error:
+        conn.rollback()
+        app.logger.exception('No se pudo mover la inscripción %s a la papelera.', id)
+        flash('No se pudo mover el estudiante a la papelera. Inténtelo nuevamente.', 'error')
+        return redirect(destino_error)
+    finally:
+        if conn.is_connected():
+            conn.close()
 
-    for archivo in archivos:
-        ruta_archivo = UPLOAD_FOLDER / archivo[0]
-        try:
-            ruta_archivo.unlink(missing_ok=True)
-        except OSError:
-            app.logger.exception('No se pudo eliminar el archivo adjunto %s', ruta_archivo)
-    
-    flash('Inscripción eliminada correctamente.', 'success')
+    flash('Estudiante enviado a la papelera. Su expediente y documentos se conservaron.', 'success')
+    if desde_ficha:
+        return redirect(url_for('ficha_estudiante', id=id, retirado=1))
     return redirect(url_for('seleccionar_estudiante_eliminar'))
 
 @app.route('/inscripcion', methods=['GET', 'POST'])
@@ -850,7 +956,7 @@ def ver_datos():
     c = conn.cursor(dictionary=True)
     
     # Construcción de consulta para inscripciones
-    query_ins = 'SELECT * FROM inscripciones WHERE 1=1'
+    query_ins = 'SELECT * FROM inscripciones WHERE eliminado_en IS NULL'
     params_ins = []
     
     if search_query:
@@ -877,6 +983,35 @@ def ver_datos():
                            search_query=search_query,
                            grado_filter=grado_filter,
                            seccion_filter=seccion_filter)
+
+@app.route('/estudiantes/grado')
+def lista_estudiantes_grado():
+    if 'usuario' not in session:
+        return redirect(url_for('login'))
+
+    ano_cursado = request.args.get('ano_cursado', '')
+    grado, seccion = separar_ubicacion_academica(ano_cursado)
+    if not grado or not seccion:
+        abort(404)
+
+    conn = db_connection.get_connection()
+    c = conn.cursor(dictionary=True)
+    c.execute(
+        'SELECT id, nombre, apellido, ano_cursado, cedula, tutor_nombre, '
+        'tutor_apellido, tutor_cedula, tutor_parentesco, tutor_parentesco_otro, '
+        'tutor_telefono, tutor_correo, tutor2_nombre, tutor2_apellido, tutor2_cedula '
+        'FROM inscripciones WHERE ano_cursado = %s AND eliminado_en IS NULL '
+        'ORDER BY apellido, nombre',
+        (ano_cursado,)
+    )
+    inscripciones = c.fetchall()
+    conn.close()
+    return render_template(
+        'lista_grado.html',
+        ano_cursado=ano_cursado,
+        columnas=COLUMNAS_EXPEDIENTE,
+        inscripciones=inscripciones
+    )
     
 if __name__ == '__main__':
     try:

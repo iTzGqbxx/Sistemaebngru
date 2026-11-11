@@ -42,7 +42,8 @@ CREATE TABLE `inscripciones` (
   `tutor_correo` varchar(255) NOT NULL DEFAULT 'No registrado',
   `tutor2_cedula` varchar(30) NOT NULL DEFAULT 'No registrado',
   `tutor2_nombre` varchar(255) NOT NULL DEFAULT 'No registrado',
-  `tutor2_apellido` varchar(255) NOT NULL DEFAULT 'No registrado'
+  `tutor2_apellido` varchar(255) NOT NULL DEFAULT 'No registrado',
+  `eliminado_en` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
 --
