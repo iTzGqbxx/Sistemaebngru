@@ -827,12 +827,78 @@ input[readonly] {
     background-color: #ffffff;
 }
 
+.tarjeta-acceso-bloqueada {
+    width: 100%;
+    margin: 0;
+    border: 1px solid #e1e7ed;
+    font: inherit;
+    text-align: left;
+}
+
+.tarjeta-en-construccion {
+    position: relative;
+    overflow: hidden;
+    border-color: #d7dfe7;
+    background-color: #ffffff;
+    background-image: repeating-linear-gradient(
+        128deg,
+        transparent 0,
+        transparent 6px,
+        rgba(220, 38, 38, 0.78) 7px,
+        rgba(220, 38, 38, 0.78) 10px,
+        transparent 11px,
+        transparent 17px
+    );
+    cursor: not-allowed;
+}
+
+.contenido-construccion {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 24px;
+    border: 2px solid #1a4a75;
+    border-radius: 3px;
+    background-color: rgba(234, 241, 247, 0.96);
+    box-shadow: 0 4px 12px rgba(11, 60, 93, 0.3);
+    text-align: center;
+    white-space: nowrap;
+    transform: translate(-50%, -50%);
+}
+
+.contenido-construccion strong {
+    color: #1a4a75;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+}
+
 .seleccion-eliminar .aviso-eliminacion {
     padding: 12px 14px;
     border-left: 4px solid #e74c3c;
     border-radius: 4px;
     color: #8c2f25;
     background-color: #fdede9;
+}
+
+.seleccion-eliminar .aviso-papelera {
+    padding: 12px 14px;
+    border-left: 4px solid #1a4a75;
+    border-radius: 4px;
+    color: #244b6a;
+    background-color: #eaf1f7;
+}
+
+.fecha-papelera {
+    display: block;
+    margin-top: 4px;
+    color: #647789;
+    font-size: 12px;
+    font-weight: normal;
 }
 
 .grupo-eliminar-estudiantes {
@@ -891,6 +957,24 @@ input[readonly] {
 
 .btn-eliminar-estudiante:hover {
     background-color: #c0392b;
+}
+
+.btn-restaurar-estudiante {
+    width: auto;
+    margin: 0;
+    padding: 7px 12px;
+    border: 0;
+    border-radius: 4px;
+    color: #ffffff;
+    background-color: #27864b;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.btn-restaurar-estudiante:hover {
+    background-color: #1e6d3c;
 }
 
 .contenido-acceso {
@@ -1001,11 +1085,21 @@ input[readonly] {
 }
 
 .grupo-titulo {
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     margin: 0;
     padding: 11px 14px;
     color: #ffffff;
     background-color: #1a4a75;
     font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.grupo-titulo:hover {
+    background-color: #123452;
 }
 
 .lista-estudiantes {
@@ -1036,6 +1130,60 @@ input[readonly] {
 .indicador-ficha {
     color: #1a4a75;
     font-size: 18px;
+}
+
+.grupo-titulo .indicador-ficha {
+    color: #ffffff;
+}
+
+.tabla-expedientes-contenedor {
+    width: 100%;
+    overflow-x: auto;
+    margin: 18px 0 30px;
+    border: 1px solid #d9e1e8;
+    border-radius: 6px;
+    background-color: #ffffff;
+}
+
+.tabla-expedientes {
+    width: 100%;
+    min-width: 1500px;
+    border-collapse: collapse;
+}
+
+.tabla-expedientes th,
+.tabla-expedientes td {
+    padding: 11px 13px;
+    border-bottom: 1px solid #e4e9ee;
+    border-right: 1px solid #e4e9ee;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.tabla-expedientes th {
+    position: sticky;
+    top: 0;
+    color: #ffffff;
+    background-color: #1a4a75;
+    font-size: 13px;
+}
+
+.tabla-expedientes td {
+    color: #333333;
+    font-size: 13px;
+}
+
+.tabla-expedientes tbody tr:nth-child(even) {
+    background-color: #f5f8fa;
+}
+
+.tabla-expedientes tbody tr:hover {
+    background-color: #eaf1f7;
+}
+
+.tabla-expedientes td a {
+    color: #1a4a75;
+    font-weight: 700;
 }
 
 .ficha-estudiante {
