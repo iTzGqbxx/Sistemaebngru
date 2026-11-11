@@ -66,7 +66,7 @@
                 <h5 style="color: #2980b9; font-weight: bold; margin-bottom: 5px;"> Panel de desarrollador - Estado del
                     sistema</h5>
                 <p style="font-size: 12px; color: #444; margin-bottom: 12px;">Acceso administrativo total concedido al
-                    desarrollador. Puede eliminar y modificar registros en MySQL.</p>
+                    desarrollador. Puede modificar registros y gestionar la papelera de estudiantes.</p>
                 <div style="display: flex; gap: 15px; flex-wrap: wrap;">
                     <div
                         style="background-color: #fff; padding: 10px; border-radius: 6px; flex: 1; border: 1px solid #cbd5e1; min-width: 120px;">
@@ -76,7 +76,7 @@
                     <div
                         style="background-color: #fff; padding: 10px; border-radius: 6px; flex: 1; border: 1px solid #cbd5e1; min-width: 120px;">
                         <div style="font-size: 11px; color: #7f8c8d;">Permisos de eliminación</div>
-                        <div style="font-size: 13px; font-weight: bold; color: #c0392b;">Habilitados (eliminación total)</div>
+                        <div style="font-size: 13px; font-weight: bold; color: #c0392b;">Habilitados (baja reversible)</div>
                     </div>
                 </div>
             </div>
@@ -128,8 +128,8 @@
                         <svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6m4-6v6M6 7l1 14h10l1-14M9 7V4h6v3"/></svg>
                     </span>
                     <span class="contenido-acceso">
-                        <strong>Eliminar estudiante</strong>
-                        <span>{% if puede_gestionar_expedientes %}Seleccionar estudiante y confirmar eliminación{% else %}Requiere autorización de la directora{% endif %}</span>
+                        <strong>Enviar a papelera</strong>
+                        <span>{% if puede_gestionar_expedientes %}Retirar temporalmente un expediente{% else %}Requiere autorización de la directora{% endif %}</span>
                     </span>
                     <span class="flecha-acceso" aria-hidden="true">&rarr;</span>
                 {% if puede_gestionar_expedientes %}
@@ -138,6 +138,56 @@
                 </button>
                 {% endif %}
                 {% endif %}
+
+                {% if mostrar_boton_papelera %}
+                {% if puede_gestionar_expedientes %}
+                <a href="{{ url_for('papelera_estudiantes') }}" class="tarjeta-acceso tarjeta-acceso-azul">
+                {% else %}
+                <button type="button" class="tarjeta-acceso tarjeta-acceso-azul tarjeta-acceso-bloqueada"
+                        onclick="alert('Como administrador, no tienes permisos para acceder a la papelera. Llame a la directora para ejecutarla.');">
+                {% endif %}
+                    <span class="icono-acceso" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2m-11 0 1 15h12l1-15M10 10v7m4-7v7"/></svg>
+                    </span>
+                    <span class="contenido-acceso">
+                        <strong>Papelera de estudiantes</strong>
+                        <span>{% if puede_gestionar_expedientes %}Revisar y restaurar expedientes retirados{% else %}Requiere autorización de la directora{% endif %}</span>
+                    </span>
+                    <span class="flecha-acceso" aria-hidden="true">&rarr;</span>
+                {% if puede_gestionar_expedientes %}
+                </a>
+                {% else %}
+                </button>
+                {% endif %}
+                {% endif %}
+
+                <div class="tarjeta-acceso tarjeta-acceso-azul tarjeta-en-construccion" aria-disabled="true">
+                    <span class="icono-acceso" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21z"/><path d="M4 5.5v13A2.5 2.5 0 0 1 6.5 16H20M8 7h8m-8 3h8"/></svg>
+                    </span>
+                    <span class="contenido-acceso">
+                        <strong>Biblioteca virtual</strong>
+                        <span>Recursos educativos y material de consulta</span>
+                    </span>
+                    <span class="flecha-acceso" aria-hidden="true">&rarr;</span>
+                    <span class="contenido-construccion">
+                        <strong>FASE EN CONSTRUCCIÓN</strong>
+                    </span>
+                </div>
+
+                <div class="tarjeta-acceso tarjeta-acceso-azul tarjeta-en-construccion" aria-disabled="true">
+                    <span class="icono-acceso" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M8 8h8m-8 4h8m-8 4h5"/><path d="m16 17 1.5 1.5L21 15"/></svg>
+                    </span>
+                    <span class="contenido-acceso">
+                        <strong>Actividades académicas</strong>
+                        <span>Ejercicios y tareas para reforzar el aprendizaje</span>
+                    </span>
+                    <span class="flecha-acceso" aria-hidden="true">&rarr;</span>
+                    <span class="contenido-construccion">
+                        <strong>FASE EN CONSTRUCCIÓN</strong>
+                    </span>
+                </div>
 
             </section>
 

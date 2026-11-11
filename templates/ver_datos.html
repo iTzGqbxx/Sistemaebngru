@@ -206,7 +206,10 @@
         <div class="grupos-estudiantes">
             {% for grupo in inscripciones|groupby('ano_cursado') %}
             <section class="grupo-estudiantes" aria-label="{{ grupo.grouper }}">
-                <h4 class="grupo-titulo">{{ grupo.grouper }}</h4>
+                <a class="grupo-titulo" href="{{ url_for('lista_estudiantes_grado', ano_cursado=grupo.grouper) }}">
+                    {{ grupo.grouper }}
+                    <span class="indicador-ficha" aria-hidden="true">&rarr;</span>
+                </a>
                 <div class="lista-estudiantes">
                     {% for ins in grupo.list %}
                     <a class="enlace-estudiante" href="{{ url_for('ficha_estudiante', id=ins.id) }}">

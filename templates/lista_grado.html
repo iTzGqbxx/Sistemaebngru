@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ ano_cursado }} - Expedientes</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    {% include '_menu_navegacion.html' %}
+
+    <header>
+        <h1>Control de Estudios - E.B.N. General Rafael Urdaneta</h1>
+        <nav>
+            {% set fallback_url = url_for('ver_datos') %}
+            {% include '_boton_atras.html' %}
+            <a href="{{ url_for('dashboard') }}" style="margin-right: 15px;">Inicio</a>
+            <a href="{{ url_for('ver_datos') }}" style="margin-right: 15px;">Ver Registros</a>
+            <a href="{{ url_for('logout') }}">Cerrar sesión</a>
+            {% include '_boton_refrescar.html' %}
+        </nav>
+    </header>
+    <hr>
+
+    <main>
+        <h2>Expedientes: {{ ano_cursado }}</h2>
+        <p>Registros del grado y sección, organizados en columnas.</p>
+
+        {% if inscripciones %}
+        <div class="tabla-expedientes-contenedor">
+            <table class="tabla-expedientes">
+                <thead>
+                    <tr>
+                        {% for campo, etiqueta in columnas %}
+                        <th scope="col">{{ etiqueta }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ins in inscripciones %}
+                    <tr>
+                        {% for campo, etiqueta in columnas %}
+                        <td>
+                            {% if campo == 'id' %}
+                            <a href="{{ url_for('ficha_estudiante', id=ins.id) }}">{{ ins[campo] }}</a>
+                            {% else %}
+                            {{ ins[campo] or 'No registrado' }}
+                            {% endif %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="sin-datos">No hay expedientes activos registrados en este grado y sección.</div>
+        {% endif %}
+    </main>
+    <hr>
+
+    <footer>
+        <p style="text-align: center;">2026 Prototipo de sistema de matrícula - E.B.N. General Rafael Urdaneta</p>
+    </footer>
+</body>
+</html>

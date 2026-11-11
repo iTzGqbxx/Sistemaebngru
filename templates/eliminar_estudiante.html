@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Eliminar estudiante - Sistema Escolar</title>
+    <title>Enviar estudiante a la papelera - Sistema Escolar</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body>
@@ -16,6 +16,9 @@
             {% include '_boton_atras.html' %}
             <a href="{{ url_for('dashboard') }}">Inicio</a>
             <a href="{{ url_for('ver_datos') }}">Ver Registros</a>
+            {% if puede_gestionar_expedientes %}
+            <a href="{{ url_for('papelera_estudiantes') }}">Papelera</a>
+            {% endif %}
             <a href="{{ url_for('logout') }}">Cerrar sesión</a>
             {% include '_boton_refrescar.html' %}
         </nav>
@@ -23,8 +26,8 @@
     <hr>
 
     <main class="seleccion-eliminar">
-        <h2>Eliminar estudiante</h2>
-        <p class="aviso-eliminacion">Esta acción elimina permanentemente la inscripción y sus archivos adjuntos.</p>
+        <h2>Enviar estudiante a la papelera</h2>
+        <p class="aviso-eliminacion">El expediente y sus documentos se conservarán. Puedes restaurarlo desde la papelera si el estudiante regresa.</p>
 
         {% with messages = get_flashed_messages(with_categories=true) %}
           {% if messages %}
@@ -43,8 +46,8 @@
                             <div class="fila-eliminar-estudiante">
                                 <span class="nombre-eliminar-estudiante">{{ estudiante.nombre }} {{ estudiante.apellido }}</span>
                                 <form action="{{ url_for('eliminar_inscripcion', id=estudiante.id) }}" method="POST"
-                                      onsubmit="return confirm('¿Eliminar permanentemente la inscripción de este estudiante y sus archivos? Esta acción no se puede deshacer.');">
-                                    <button type="submit" class="btn-eliminar-estudiante">Eliminar</button>
+                                      onsubmit="return confirm('¿Enviar a la papelera el expediente de este estudiante? Podrá restaurarlo después.');">
+                                    <button type="submit" class="btn-eliminar-estudiante">Enviar a papelera</button>
                                 </form>
                             </div>
                         {% endfor %}
@@ -52,7 +55,7 @@
                 </section>
             {% endfor %}
         {% else %}
-            <p class="sin-datos">No hay estudiantes inscritos para eliminar.</p>
+            <p class="sin-datos">No hay estudiantes activos para enviar a la papelera.</p>
         {% endif %}
     </main>
 </body>
