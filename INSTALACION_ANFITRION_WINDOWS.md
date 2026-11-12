@@ -14,10 +14,35 @@
 4. Inicia MySQL desde XAMPP. Apache solo hace falta para phpMyAdmin; no se usa
    para servir la aplicación.
 5. En phpMyAdmin, crea la base vacía `escuela_ebngru` e importa
-   `escuela_db.sql`. Crea el usuario MySQL `gabounermb@localhost` con permisos
-   limitados a esa base de datos.
-6. Crea `instance\config.json` copiando `config.example.json`. Completa la
-   contraseña de MySQL y genera una clave secreta nueva:
+   `escuela_db.sql`.
+6. Crea el usuario MySQL que usará la aplicación. En phpMyAdmin, abre la
+   pestaña **SQL** conectado como administrador y ejecuta:
+
+   ```sql
+   CREATE USER 'gabounermb'@'localhost'
+   IDENTIFIED BY 'REEMPLAZA_ESTA_CONTRASENA';
+
+   GRANT SELECT, INSERT, UPDATE, DELETE
+   ON escuela_ebngru.*
+   TO 'gabounermb'@'localhost';
+   ```
+
+   Reemplaza `REEMPLAZA_ESTA_CONTRASENA` por una contraseña nueva antes de
+   ejecutar el SQL. Si el usuario ya existe, no repitas `CREATE USER`; cambia
+   su contraseña con `ALTER USER 'gabounermb'@'localhost' IDENTIFIED BY
+   'TU_CONTRASENA_NUEVA';` y vuelve a aplicar el `GRANT` si hace falta. Estos
+   permisos se limitan a consultar y modificar datos dentro de
+   `escuela_ebngru`; la creación e importación de tablas se hace con la cuenta
+   administradora de phpMyAdmin, no con la cuenta de la aplicación.
+7. Crea `instance\config.json` copiando `config.example.json`. Configura:
+
+   - `db_user`: `gabounermb`
+   - `db_password`: la misma contraseña que asignaste al usuario MySQL
+   - `db_name`: `escuela_ebngru`
+   - `db_host`: `localhost`
+   - `db_port`: `3306`
+
+   Genera además una clave secreta nueva:
 
    ```powershell
    python -c "import secrets; print(secrets.token_urlsafe(48))"
