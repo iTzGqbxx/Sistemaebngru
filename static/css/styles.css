@@ -147,6 +147,33 @@ select {
     background-color: #ffffff;
 }
 
+.selector-turno {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px 24px;
+    margin: 0 10px 4px;
+    color: #1a4a75;
+}
+
+.etiqueta-turno {
+    flex-basis: 100%;
+}
+
+.opcion-turno {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+}
+
+.opcion-turno input[type="radio"] {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    accent-color: #1a4a75;
+}
+
 .ayuda-archivos {
     margin: 4px 0 16px;
     color: #596b7a;
@@ -1127,6 +1154,10 @@ input[readonly] {
     background-color: #f3f7fa;
 }
 
+.turno-estudiante {
+    font-weight: 400;
+}
+
 .indicador-ficha {
     color: #1a4a75;
     font-size: 18px;
@@ -1186,10 +1217,105 @@ input[readonly] {
     font-weight: 700;
 }
 
+.acciones-lista-grado {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 18px 0;
+}
+
+.btn-exportar-excel,
+.btn-imprimir-expedientes {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: auto;
+    margin: 0;
+    padding: 10px 16px;
+    border: 0;
+    border-radius: 5px;
+    color: #ffffff;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.btn-exportar-excel {
+    background-color: #27864b;
+}
+
+.btn-exportar-excel:hover {
+    background-color: #1e6d3c;
+}
+
+.btn-imprimir-expedientes {
+    background-color: #1a4a75;
+}
+
+.btn-imprimir-expedientes:hover {
+    background-color: #123452;
+}
+
 .ficha-estudiante {
     max-width: 1000px;
     margin-left: auto;
     margin-right: auto;
+}
+
+@media print {
+    @page {
+        size: landscape;
+        margin: 10mm;
+    }
+
+    body {
+        padding: 0;
+        background: #ffffff;
+    }
+
+    body > header,
+    body > hr,
+    body > footer,
+    .menu-navegacion-boton,
+    .menu-lateral-global,
+    .no-imprimir {
+        display: none !important;
+    }
+
+    body > main {
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        box-shadow: none;
+    }
+
+    .tabla-expedientes-contenedor {
+        overflow: visible;
+        border: 0;
+    }
+
+    .tabla-expedientes {
+        width: 100%;
+        min-width: 0;
+        table-layout: auto;
+        font-size: 7pt;
+    }
+
+    .tabla-expedientes th,
+    .tabla-expedientes td {
+        padding: 4px;
+        white-space: normal;
+        overflow-wrap: anywhere;
+        font-size: 7pt;
+    }
+
+    .tabla-expedientes th {
+        position: static;
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact;
+    }
 }
 
 .ficha-acciones {
