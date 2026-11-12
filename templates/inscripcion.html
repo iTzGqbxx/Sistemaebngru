@@ -15,7 +15,7 @@
             {% set fallback_url = url_for('dashboard') %}
             {% include '_boton_atras.html' %}
             <a href="{{ url_for('dashboard') }}" style="margin-right: 15px;">Inicio</a>
-            <a href="{{ url_for('logout') }}">Cerrar sesión</a>
+            {% include '_cerrar_sesion.html' %}
             {% include '_boton_refrescar.html' %}
         </nav>
     </header>
@@ -43,6 +43,7 @@
         {% endwith %}
 
         <form action="{{ url_for('inscripcion') }}" method="POST" enctype="multipart/form-data">
+            {% include '_campo_csrf.html' %}
             
             <fieldset>
                 <legend><strong>1. Ubicación académica</strong></legend>

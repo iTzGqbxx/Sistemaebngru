@@ -16,7 +16,7 @@
             {% include '_boton_atras.html' %}
             <a href="{{ url_for('dashboard') }}" style="margin-right: 15px;">Inicio</a>
             <a href="{{ url_for('ver_datos') }}" style="margin-right: 15px;">Ver Registros</a>
-            <a href="{{ url_for('logout') }}">Cerrar sesión</a>
+            {% include '_cerrar_sesion.html' %}
             {% include '_boton_refrescar.html' %}
         </nav>
     </header>
@@ -144,6 +144,7 @@
                               action="{{ url_for('eliminar_archivo_inscripcion', id=archivo.id) }}"
                               method="POST"
                               onsubmit="return confirm('¿Quieres quitar este archivo del expediente?');">
+                            {% include '_campo_csrf.html' %}
                             <button type="submit" class="btn-quitar-archivo">Quitar archivo</button>
                         </form>
                         {% endif %}
@@ -246,6 +247,7 @@
         <div class="acciones-ficha no-imprimir">
         {% if puede_gestionar_expedientes %}
             <form action="{{ url_for('eliminar_inscripcion', id=estudiante.id) }}" method="POST" onsubmit="return confirm('¿Enviar a la papelera la inscripción de este estudiante? Su expediente y documentos se conservarán.');">
+                {% include '_campo_csrf.html' %}
                 <input type="hidden" name="origen" value="ficha">
                 <button type="submit" class="btn-eliminar">Enviar a papelera</button>
             </form>

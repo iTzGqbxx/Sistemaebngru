@@ -19,7 +19,7 @@
             {% if puede_gestionar_expedientes %}
             <a href="{{ url_for('papelera_estudiantes') }}">Papelera</a>
             {% endif %}
-            <a href="{{ url_for('logout') }}">Cerrar sesión</a>
+            {% include '_cerrar_sesion.html' %}
             {% include '_boton_refrescar.html' %}
         </nav>
     </header>
@@ -47,6 +47,7 @@
                                 <span class="nombre-eliminar-estudiante">{{ estudiante.nombre }} {{ estudiante.apellido }}</span>
                                 <form action="{{ url_for('eliminar_inscripcion', id=estudiante.id) }}" method="POST"
                                       onsubmit="return confirm('¿Enviar a la papelera el expediente de este estudiante? Podrá restaurarlo después.');">
+                                    {% include '_campo_csrf.html' %}
                                     <button type="submit" class="btn-eliminar-estudiante">Enviar a papelera</button>
                                 </form>
                             </div>

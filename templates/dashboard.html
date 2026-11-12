@@ -11,15 +11,27 @@
 <body class="cuerpo-dashboard">
     {% include '_menu_navegacion.html' %}
 
-    <header>
-        <h1>Control de Estudios - E.B.N. General Rafael Urdaneta</h1>
-        <nav>
-            {% set fallback_url = url_for('dashboard') %}
-            {% include '_boton_atras.html' %}
-            <a href="{{ url_for('dashboard') }}" style="margin-right: 15px;">Inicio</a>
-            <a href="{{ url_for('logout') }}">Cerrar sesión</a>
+    <header class="encabezado-sistema">
+        <div class="info-colegio">
+            <div class="texto-colegio">
+                <h1>E.B.N. General Rafael Urdaneta</h1>
+                {% if session['rol'] == 'desarrollador' %}
+                <p>Bienvenido(a), Desarrollador ({{ session['usuario'] }})</p>
+                {% elif session['rol'] == 'directora' %}
+                <p>Bienvenido(a), Directora ({{ session['usuario'] }})</p>
+                {% elif session['rol'] in ['administracion', 'administrador', 'administracionGRU'] %}
+                <p>Bienvenido(a), Administrador ({{ session['usuario'] }})</p>
+                {% else %}
+                <p>Bienvenido(a), {{ session['usuario'] }}</p>
+                {% endif %}
+            </div>
+        </div>
+        <form class="usuario-logout" action="{{ url_for('logout') }}" method="POST">
+            {% include '_avatar_usuario.html' %}
+            {% include '_campo_csrf.html' %}
+            <button type="submit" class="btn-logout">Cerrar sesión</button>
             {% include '_boton_refrescar.html' %}
-        </nav>
+        </form>
     </header>
 
     <!-- CONTENEDOR INTERNO DE LA INTERFAZ -->
@@ -53,7 +65,9 @@
                     <div
                         style="background-color: #fff; padding: 10px; border-radius: 6px; flex: 1; border: 1px solid #cbd5e1; min-width: 120px;">
                         <div style="font-size: 11px; color: #7f8c8d;">Base de datos</div>
-                        <div style="font-size: 13px; font-weight: bold; color: #27ae60;">MySQL activa</div>
+                        <div style="font-size: 13px; font-weight: bold; color: {{ '#27ae60' if base_datos_disponible else '#c0392b' }};">
+                            {{ 'Conectada' if base_datos_disponible else 'No disponible' }}
+                        </div>
                     </div>
                     <div
                         style="background-color: #fff; padding: 10px; border-radius: 6px; flex: 1; border: 1px solid #cbd5e1; min-width: 120px;">

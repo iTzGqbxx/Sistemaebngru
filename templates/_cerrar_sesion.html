@@ -1,0 +1,4 @@
+<form class="form-cerrar-sesion" action="{{ url_for('logout') }}" method="POST">
+    {% include '_campo_csrf.html' %}
+    <button class="boton-cerrar-sesion" type="submit">Cerrar sesión</button>
+</form>

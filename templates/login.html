@@ -201,6 +201,7 @@
         {% endwith %}
 
         <form class="formulario-login" method="POST" action="{{ url_for('login') }}" onsubmit="validarAcceso(event)">
+            {% include '_campo_csrf.html' %}
             
             <div class="grupo-entrada">
                 <label for="usuario">Usuario</label>

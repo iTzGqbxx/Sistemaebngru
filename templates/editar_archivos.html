@@ -16,7 +16,7 @@
             {% include '_boton_atras.html' %}
             <a href="{{ url_for('dashboard') }}" style="margin-right: 15px;">Inicio</a>
             <a href="{{ url_for('ver_datos') }}" style="margin-right: 15px;">Ver Registros</a>
-            <a href="{{ url_for('logout') }}">Cerrar sesión</a>
+            {% include '_cerrar_sesion.html' %}
             {% include '_boton_refrescar.html' %}
         </nav>
     </header>
@@ -36,6 +36,7 @@
         {% endwith %}
 
         <form action="{{ url_for('editar_archivos_inscripcion', id=estudiante.id) }}" method="POST" enctype="multipart/form-data">
+            {% include '_campo_csrf.html' %}
             <div class="rejilla-archivos">
                 {% for campo, datos in archivos_inscripcion.items() %}
                 {% set tipo = datos[0] %}

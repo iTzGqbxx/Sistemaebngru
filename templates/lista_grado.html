@@ -3,8 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ ano_cursado }} - Expedientes</title>
+    <title>Estudiantes - {{ ano_cursado }}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <style>
+        .tabla-expedientes { width: 100%; border-collapse: collapse; }
+        .tabla-expedientes th, .tabla-expedientes td {
+            border: 1px solid #d5dce3;
+            padding: 9px;
+            text-align: left;
+            vertical-align: top;
+        }
+        .tabla-expedientes th { background: #1a4a75; color: white; }
+        .tabla-expedientes tr:nth-child(even) { background: #f4f6f9; }
+        .encabezado-columna {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+    </style>
 </head>
 <body>
     {% include '_menu_navegacion.html' %}
@@ -15,16 +32,22 @@
             {% set fallback_url = url_for('ver_datos') %}
             {% include '_boton_atras.html' %}
             <a href="{{ url_for('dashboard') }}" style="margin-right: 15px;">Inicio</a>
-            <a href="{{ url_for('ver_datos') }}" style="margin-right: 15px;">Ver Registros</a>
-            <a href="{{ url_for('logout') }}">Cerrar sesión</a>
+            <a href="{{ url_for('ver_datos') }}" style="margin-right: 15px;">Ver registros</a>
+            {% include '_cerrar_sesion.html' %}
             {% include '_boton_refrescar.html' %}
         </nav>
     </header>
     <hr>
 
     <main>
-        <h2>Expedientes: {{ ano_cursado }}</h2>
-        <p>Registros del grado y sección, organizados en columnas.</p>
+        <h2>Estudiantes de {{ ano_cursado }}</h2>
+        <div class="acciones-lista-grado">
+            <a class="btn-exportar-excel no-imprimir"
+               href="{{ url_for('exportar_inscripciones_grado', ano_cursado=ano_cursado) }}">Exportar a Excel</a>
+            <button type="button" class="btn-imprimir-expedientes no-imprimir"
+                    onclick="window.print()" aria-label="Imprimir lista de estudiantes">Imprimir lista</button>
+            <span class="conteo-lista-grado" aria-live="polite" aria-atomic="true">{{ inscripciones|length }} estudiante(s)</span>
+        </div>
 
         {% if inscripciones %}
         <div class="tabla-expedientes-contenedor">
@@ -32,35 +55,183 @@
                 <thead>
                     <tr>
                         {% for campo, etiqueta in columnas %}
-                        <th scope="col">{{ etiqueta }}</th>
+                        <th scope="col">
+                            <div class="encabezado-columna">
+                                <span>{{ etiqueta }}</span>
+                                <button type="button"
+                                        class="btn-filtro-columna no-imprimir"
+                                        data-column="{{ loop.index0 }}"
+                                        aria-label="Filtrar por {{ etiqueta }}"
+                                        aria-controls="menu-filtro-columna"
+                                        aria-expanded="false"
+                                        aria-pressed="false"
+                                        title="Filtrar por {{ etiqueta }}">
+                                    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+                                        <path d="M1.5 2.5h13L9.5 7.8v4.1l-3 1.6V7.8z"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </th>
                         {% endfor %}
                     </tr>
                 </thead>
                 <tbody>
-                    {% for ins in inscripciones %}
+                    {% for inscripcion in inscripciones %}
                     <tr>
                         {% for campo, etiqueta in columnas %}
                         <td>
                             {% if campo == 'id' %}
-                            <a href="{{ url_for('ficha_estudiante', id=ins.id) }}">{{ ins[campo] }}</a>
+                            <a href="{{ url_for('ficha_estudiante', id=inscripcion[campo]) }}">{{ inscripcion[campo] }}</a>
                             {% else %}
-                            {{ ins[campo] or 'No registrado' }}
+                            {{ inscripcion[campo] if inscripcion[campo] not in (none, '') else 'No registrado' }}
                             {% endif %}
                         </td>
                         {% endfor %}
                     </tr>
                     {% endfor %}
+                    <tr class="fila-sin-resultados-filtro" hidden>
+                        <td colspan="{{ columnas|length }}">No hay estudiantes que coincidan con los filtros seleccionados.</td>
+                    </tr>
                 </tbody>
             </table>
         </div>
         {% else %}
-        <div class="sin-datos">No hay expedientes activos registrados en este grado y sección.</div>
+        <p class="sin-datos">No hay estudiantes registrados en este grado y sección.</p>
         {% endif %}
     </main>
     <hr>
+    <footer>{% include '_pie_pagina.html' %}</footer>
+    <div id="menu-filtro-columna" class="menu-filtro-columna no-imprimir"
+         role="group" aria-label="Opciones del filtro" hidden></div>
+    <script>
+        (function () {
+            const table = document.querySelector('.tabla-expedientes');
+            const menu = document.getElementById('menu-filtro-columna');
+            if (!table || !menu) return;
 
-    <footer>
-        <p style="text-align: center;">2026 Prototipo de sistema de matrícula - E.B.N. General Rafael Urdaneta</p>
-    </footer>
+            const rows = Array.from(table.querySelectorAll('tbody tr:not(.fila-sin-resultados-filtro)'));
+            const noResultsRow = table.querySelector('.fila-sin-resultados-filtro');
+            const count = document.querySelector('.conteo-lista-grado');
+            const filterButtons = Array.from(table.querySelectorAll('.btn-filtro-columna'));
+            const filters = new Map();
+            let activeButton = null;
+
+            function closeMenu(restoreFocus) {
+                if (menu.hidden) return;
+                menu.hidden = true;
+                if (activeButton) {
+                    const button = activeButton;
+                    button.setAttribute('aria-expanded', 'false');
+                    activeButton = null;
+                    if (restoreFocus) button.focus();
+                }
+            }
+
+            function updateRows() {
+                let visibleCount = 0;
+                rows.forEach(function (row) {
+                    const matches = Array.from(filters.entries()).every(function (filter) {
+                        const cell = row.cells[filter[0]];
+                        return cell && cell.textContent.trim() === filter[1];
+                    });
+                    row.hidden = !matches;
+                    if (matches) visibleCount += 1;
+                });
+
+                noResultsRow.hidden = visibleCount > 0;
+                count.textContent = filters.size
+                    ? `${visibleCount} de ${rows.length} estudiante(s)`
+                    : `${rows.length} estudiante(s)`;
+            }
+
+            function updateButton(button, column) {
+                const active = filters.has(column);
+                button.classList.toggle('activo', active);
+                button.setAttribute('aria-pressed', String(active));
+            }
+
+            function openMenu(button) {
+                closeMenu(false);
+                const column = Number(button.dataset.column);
+                activeButton = button;
+                menu.replaceChildren();
+
+                function addOption(label, selected, onSelect) {
+                    const option = document.createElement('button');
+                    option.type = 'button';
+                    option.className = 'menu-filtro-opcion';
+                    option.setAttribute('aria-pressed', String(selected));
+                    option.textContent = label;
+                    option.addEventListener('click', onSelect);
+                    menu.appendChild(option);
+                }
+
+                addOption('Todos', !filters.has(column), function () {
+                    filters.delete(column);
+                    updateButton(button, column);
+                    updateRows();
+                    closeMenu(true);
+                });
+
+                const values = Array.from(new Set(rows.map(function (row) {
+                    return row.cells[column].textContent.trim();
+                }))).sort(function (first, second) {
+                    return first.localeCompare(second, 'es', { sensitivity: 'base' });
+                });
+
+                values.forEach(function (value) {
+                    addOption(value, filters.get(column) === value, function () {
+                        filters.set(column, value);
+                        updateButton(button, column);
+                        updateRows();
+                        closeMenu(true);
+                    });
+                });
+
+                button.setAttribute('aria-expanded', 'true');
+                menu.hidden = false;
+                const bounds = button.getBoundingClientRect();
+                const left = Math.max(8, Math.min(bounds.left, window.innerWidth - menu.offsetWidth - 8));
+                let top = bounds.bottom + 4;
+                if (top + menu.offsetHeight > window.innerHeight - 8) {
+                    top = Math.max(8, bounds.top - menu.offsetHeight - 4);
+                }
+                menu.style.left = `${left}px`;
+                menu.style.top = `${top}px`;
+                const selectedOption = menu.querySelector('[aria-pressed="true"]');
+                if (selectedOption) selectedOption.focus();
+            }
+
+            filterButtons.forEach(function (button) {
+                button.addEventListener('click', function (event) {
+                    event.stopPropagation();
+                    if (!menu.hidden && activeButton === button) {
+                        closeMenu(false);
+                    } else {
+                        openMenu(button);
+                    }
+                });
+            });
+
+            document.addEventListener('click', function (event) {
+                if (!menu.hidden && !menu.contains(event.target)
+                        && (!activeButton || !activeButton.contains(event.target))) {
+                    closeMenu(false);
+                }
+            });
+
+            document.addEventListener('keydown', function (event) {
+                if (event.key === 'Escape') closeMenu(true);
+            });
+
+            window.addEventListener('resize', function () {
+                closeMenu(false);
+            });
+
+            document.addEventListener('scroll', function () {
+                closeMenu(false);
+            }, true);
+        })();
+    </script>
 </body>
 </html>

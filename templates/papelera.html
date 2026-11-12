@@ -16,7 +16,7 @@
             {% include '_boton_atras.html' %}
             <a href="{{ url_for('dashboard') }}">Inicio</a>
             <a href="{{ url_for('ver_datos') }}">Ver Registros</a>
-            <a href="{{ url_for('logout') }}">Cerrar sesión</a>
+            {% include '_cerrar_sesion.html' %}
             {% include '_boton_refrescar.html' %}
         </nav>
     </header>
@@ -47,6 +47,7 @@
                                 </span>
                                 <form action="{{ url_for('restaurar_inscripcion', id=estudiante.id) }}" method="POST"
                                       onsubmit="return confirm('¿Restaurar el expediente de este estudiante a los registros activos?');">
+                                    {% include '_campo_csrf.html' %}
                                     <button type="submit" class="btn-restaurar-estudiante">Restaurar</button>
                                 </form>
                             </div>
