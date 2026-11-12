@@ -1,6 +1,8 @@
 import sys
+import os
 import re
 import hmac
+import json
 from hashlib import sha1, sha256
 from io import BytesIO
 from pathlib import Path
@@ -8,11 +10,14 @@ from uuid import uuid4
 
 import mysql.connector
 import pymupdf
+from openpyxl import Workbook
+from openpyxl.styles import Alignment, Font, PatternFill
 from mysql.connector import Error
 from flask import Flask, abort, render_template, request, redirect, url_for, session, flash, send_file, send_from_directory
 from werkzeug.utils import secure_filename
 from werkzeug.exceptions import RequestEntityTooLarge
 from werkzeug.security import check_password_hash, generate_password_hash
+from waitress import serve
 
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
@@ -20,18 +25,57 @@ if hasattr(sys.stderr, 'reconfigure'):
     sys.stderr.reconfigure(encoding='utf-8')
 
 app = Flask(__name__)
-app.secret_key = 'EBNGRU_secret_key_super_secure'
+CONFIG_PATH = Path(app.instance_path) / 'config.json'
+CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
+try:
+    with CONFIG_PATH.open(encoding='utf-8') as archivo_config:
+        CONFIGURACION = json.load(archivo_config)
+except FileNotFoundError as error:
+    raise RuntimeError(
+        f'No se encontró {CONFIG_PATH}. Copie config.example.json como '
+        'instance/config.json y complete sus valores.'
+    ) from error
+except json.JSONDecodeError as error:
+    raise RuntimeError(f'El archivo {CONFIG_PATH} no contiene JSON válido.') from error
+
+if not isinstance(CONFIGURACION, dict):
+    raise RuntimeError(f'La configuración en {CONFIG_PATH} debe ser un objeto JSON.')
+
+for campo in ('db_user', 'db_password', 'db_name', 'secret_key'):
+    valor = CONFIGURACION.get(campo)
+    if not isinstance(valor, str) or not valor.strip() or valor.startswith('PON_'):
+        raise RuntimeError(f'Complete el campo "{campo}" en {CONFIG_PATH}.')
+
+if len(CONFIGURACION['secret_key']) < 32:
+    raise RuntimeError(f'"secret_key" en {CONFIG_PATH} debe tener al menos 32 caracteres.')
+
+try:
+    CONFIGURACION['db_port'] = int(CONFIGURACION.get('db_port', 3306))
+except (TypeError, ValueError) as error:
+    raise RuntimeError(f'"db_port" en {CONFIG_PATH} debe ser un número entero.') from error
+
+if not 1 <= CONFIGURACION['db_port'] <= 65535:
+    raise RuntimeError(f'"db_port" en {CONFIG_PATH} debe estar entre 1 y 65535.')
+
+if not isinstance(CONFIGURACION.get('db_host', 'localhost'), str):
+    raise RuntimeError(f'"db_host" en {CONFIG_PATH} debe ser texto.')
+
+app.secret_key = CONFIGURACION['secret_key']
 app.config['MAX_CONTENT_LENGTH'] = 32 * 1024 * 1024
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 UPLOAD_FOLDER = Path(app.instance_path) / 'uploads'
 USUARIOS_GESTION_EXPEDIENTES = {'desarrollador', 'directora', 'directoraGRU'}
 ROLES_ADMINISTRACION = {'administracion', 'administrador', 'administracionGRU'}
 GRADOS_CURSADO = ('1er Grado', '2do Grado', '3er Grado', '4to Grado', '5to Grado')
 SECCIONES = ('A', 'B', 'C', 'D')
+TURNOS = ('Matutino', 'Vespertino')
 COLUMNAS_EXPEDIENTE = (
     ('id', 'ID'),
     ('nombre', 'Nombres del estudiante'),
     ('apellido', 'Apellidos del estudiante'),
     ('ano_cursado', 'Grado y sección'),
+    ('turno', 'Turno'),
     ('cedula', 'Cédula estudiantil'),
     ('tutor_nombre', 'Nombres del representante'),
     ('tutor_apellido', 'Apellidos del representante'),
@@ -49,6 +93,7 @@ CAMPOS_EDITABLES = {
     'nombre': ('nombre', 'Nombres del estudiante', True),
     'apellido': ('apellido', 'Apellidos del estudiante', True),
     'ano_cursado': ('ano_cursado', 'Grado y sección actuales', True),
+    'turno': ('turno', 'Turno', True),
     'tutor_nombre': ('tutor_nombre', 'Nombres del representante 1', True),
     'tutor_apellido': ('tutor_apellido', 'Apellidos del representante 1', True),
     'tutor_cedula': ('tutor_cedula', 'Cédula del representante 1', True),
@@ -144,24 +189,13 @@ def archivo_demasiado_grande(error):
 
 class DatabaseConnection:
     def _create_connection(self):
-        databases_to_try = ["escuela_ebngru", "escuela_db"]
-        last_error = None
-        for db_name in databases_to_try:
-            try:
-                cnx = mysql.connector.connect(
-                    user="root",
-                    password="",
-                    host="localhost",
-                    database=db_name,
-                    port="3306"
-                )
-                return cnx
-            except Error as e:
-                last_error = e
-                if getattr(e, 'errno', None) == 1049:
-                    continue
-                break
-        raise last_error
+        return mysql.connector.connect(
+            user=CONFIGURACION['db_user'],
+            password=CONFIGURACION['db_password'],
+            host=CONFIGURACION.get('db_host', 'localhost'),
+            database=CONFIGURACION['db_name'],
+            port=CONFIGURACION['db_port']
+        )
 
     def get_connection(self):
         return self._create_connection()
@@ -356,6 +390,22 @@ def editar_inscripcion(id):
             valor = f'{grado} - Sección {seccion}'
         else:
             valor = request.form.get('valor', '').strip()
+        if campo == 'turno' and valor not in TURNOS:
+            flash('Seleccione un turno válido.', 'error')
+            return render_template(
+                'editar_campo.html',
+                ins=ins,
+                campo=campo,
+                etiqueta=etiqueta,
+                valor=valor,
+                requerido=requerido,
+                grados_cursado=GRADOS_CURSADO,
+                secciones=SECCIONES,
+                grado_actual=grado_actual,
+                seccion_actual=seccion_actual,
+                parentescos_representante=PARENTESCOS_REPRESENTANTE,
+                parentesco_otro=parentesco_otro_actual
+            )
         if campo == 'tutor_parentesco':
             parentesco_otro = request.form.get('parentesco_otro', '').strip()
             if valor not in PARENTESCOS_REPRESENTANTE:
@@ -812,6 +862,11 @@ def inscripcion():
         return redirect(url_for('login'))
         
     if request.method == 'POST':
+        turno = request.form.get('turno', '').strip()
+        if turno not in TURNOS:
+            flash('Seleccione un turno válido para el estudiante.', 'error')
+            return redirect(url_for('inscripcion'))
+
         campos_cedula = (
             ('cedula_estudiantil', 'la cédula del estudiante', True),
             ('tutor_cedula', 'la cédula del representante 1', True),
@@ -898,12 +953,12 @@ def inscripcion():
             asegurar_tabla_archivos(c)
             c.execute('''
                 INSERT INTO inscripciones
-                (nombre, apellido, ano_cursado, cedula, tutor_nombre, tutor_apellido,
+                (nombre, apellido, ano_cursado, turno, cedula, tutor_nombre, tutor_apellido,
                  tutor_cedula, tutor2_nombre, tutor2_apellido, tutor2_cedula,
                  tutor_parentesco, tutor_parentesco_otro, tutor_telefono, tutor_correo)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             ''', (
-                nombres_est, apellidos_est, ano_cursado, cedula, tutor_nombre,
+                nombres_est, apellidos_est, ano_cursado, turno, cedula, tutor_nombre,
                 tutor_apellido, tutor_cedula, tutor2_nombre,
                 tutor2_apellido, tutor2_cedula, parentesco,
                 parentesco_otro or 'No registrado', telefono_representante,
@@ -951,6 +1006,7 @@ def ver_datos():
     search_query = request.args.get('q', '')
     grado_filter = request.args.get('grado', '')
     seccion_filter = request.args.get('seccion', '')
+    turno_filter = request.args.get('turno', '')
     
     conn = db_connection.get_connection()
     c = conn.cursor(dictionary=True)
@@ -971,6 +1027,12 @@ def ver_datos():
     if seccion_filter:
         query_ins += ' AND ano_cursado LIKE %s'
         params_ins.append(f'%Sección {seccion_filter}%')
+
+    if turno_filter in TURNOS:
+        query_ins += ' AND turno = %s'
+        params_ins.append(turno_filter)
+    elif turno_filter:
+        turno_filter = ''
         
     query_ins += ' ORDER BY ano_cursado, apellido, nombre'
     c.execute(query_ins, params_ins)
@@ -982,7 +1044,8 @@ def ver_datos():
                            inscripciones=inscripciones,
                            search_query=search_query,
                            grado_filter=grado_filter,
-                           seccion_filter=seccion_filter)
+                           seccion_filter=seccion_filter,
+                           turno_filter=turno_filter)
 
 @app.route('/estudiantes/grado')
 def lista_estudiantes_grado():
@@ -994,28 +1057,85 @@ def lista_estudiantes_grado():
     if not grado or not seccion:
         abort(404)
 
-    conn = db_connection.get_connection()
-    c = conn.cursor(dictionary=True)
-    c.execute(
-        'SELECT id, nombre, apellido, ano_cursado, cedula, tutor_nombre, '
-        'tutor_apellido, tutor_cedula, tutor_parentesco, tutor_parentesco_otro, '
-        'tutor_telefono, tutor_correo, tutor2_nombre, tutor2_apellido, tutor2_cedula '
-        'FROM inscripciones WHERE ano_cursado = %s AND eliminado_en IS NULL '
-        'ORDER BY apellido, nombre',
-        (ano_cursado,)
-    )
-    inscripciones = c.fetchall()
-    conn.close()
+    inscripciones = obtener_inscripciones_grado(ano_cursado)
     return render_template(
         'lista_grado.html',
         ano_cursado=ano_cursado,
         columnas=COLUMNAS_EXPEDIENTE,
         inscripciones=inscripciones
     )
+
+def obtener_inscripciones_grado(ano_cursado):
+    conn = db_connection.get_connection()
+    try:
+        c = conn.cursor(dictionary=True)
+        c.execute(
+            'SELECT id, nombre, apellido, ano_cursado, turno, cedula, tutor_nombre, '
+            'tutor_apellido, tutor_cedula, tutor_parentesco, tutor_parentesco_otro, '
+            'tutor_telefono, tutor_correo, tutor2_nombre, tutor2_apellido, tutor2_cedula '
+            'FROM inscripciones WHERE ano_cursado = %s AND eliminado_en IS NULL '
+            'ORDER BY apellido, nombre',
+            (ano_cursado,)
+        )
+        return c.fetchall()
+    finally:
+        conn.close()
+
+@app.route('/estudiantes/grado/exportar')
+def exportar_inscripciones_grado():
+    if 'usuario' not in session:
+        return redirect(url_for('login'))
+
+    ano_cursado = request.args.get('ano_cursado', '')
+    grado, seccion = separar_ubicacion_academica(ano_cursado)
+    if not grado or not seccion:
+        abort(404)
+
+    inscripciones = obtener_inscripciones_grado(ano_cursado)
+    libro = Workbook()
+    hoja = libro.active
+    hoja.title = 'Expedientes'
+    hoja.append([etiqueta for _, etiqueta in COLUMNAS_EXPEDIENTE])
+
+    for celda in hoja[1]:
+        celda.font = Font(bold=True, color='FFFFFF')
+        celda.fill = PatternFill(fill_type='solid', fgColor='1A4A75')
+        celda.alignment = Alignment(horizontal='center', vertical='center')
+
+    for inscripcion in inscripciones:
+        fila = []
+        for campo, _ in COLUMNAS_EXPEDIENTE:
+            valor = inscripcion.get(campo)
+            fila.append(valor if valor not in (None, '') else 'No registrado')
+        hoja.append(fila)
+        for celda in hoja[hoja.max_row]:
+            if isinstance(celda.value, str):
+                celda.data_type = 's'
+
+    hoja.freeze_panes = 'A2'
+    hoja.auto_filter.ref = hoja.dimensions
+    for columna in hoja.columns:
+        ancho = max(
+            len(str(celda.value or ''))
+            for celda in columna
+        )
+        hoja.column_dimensions[columna[0].column_letter].width = min(ancho + 2, 36)
+
+    archivo = BytesIO()
+    libro.save(archivo)
+    archivo.seek(0)
+    nombre_grado = secure_filename(ano_cursado)
+    return send_file(
+        archivo,
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        as_attachment=True,
+        download_name=f'expedientes_{nombre_grado}.xlsx'
+    )
     
 if __name__ == '__main__':
     try:
         test_conn = db_connection.get_connection()
+        test_conn.close()
         print("[OK] Conexión con MySQL establecida correctamente.")
     except Exception as e:
         print("\n" + "=" * 65)
@@ -1030,4 +1150,5 @@ if __name__ == '__main__':
             pass
         raise SystemExit(1)
 
-    app.run(host='0.0.0.0', port=5000)
+    print("[OK] Servidor WSGI listo en el puerto 5000.")
+    serve(app, host='0.0.0.0', port=5000)

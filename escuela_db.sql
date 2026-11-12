@@ -32,6 +32,7 @@ CREATE TABLE `inscripciones` (
   `nombre` text NOT NULL,
   `apellido` text NOT NULL,
   `ano_cursado` text NOT NULL,
+  `turno` varchar(20) DEFAULT NULL,
   `cedula` text NOT NULL,
   `tutor_nombre` varchar(255) NOT NULL DEFAULT 'No registrado',
   `tutor_apellido` varchar(255) NOT NULL DEFAULT 'No registrado',
