@@ -2,7 +2,8 @@
 
 ## Instalación inicial
 
-1. Instala Python y XAMPP en la computadora anfitriona.
+1. Instala Python 3.14.8 (versión verificada) y XAMPP en la computadora
+   anfitriona.
 2. Copia la carpeta del proyecto a una ubicación fija.
 3. Abre PowerShell en `SISTEMA PRODUCTO FUNCIONAL` e instala las dependencias:
 
@@ -12,9 +13,9 @@
 
 4. Inicia MySQL desde XAMPP. Apache solo hace falta para phpMyAdmin; no se usa
    para servir la aplicación.
-5. En phpMyAdmin, crea la base `escuela_ebngru` e importa `escuela_db.sql`.
-   Crea el usuario `gabounermb@localhost` con permisos limitados solo a esa
-   base de datos.
+5. En phpMyAdmin, crea la base vacía `escuela_ebngru` e importa
+   `escuela_db.sql`. Crea el usuario MySQL `gabounermb@localhost` con permisos
+   limitados a esa base de datos.
 6. Crea `instance\config.json` copiando `config.example.json`. Completa la
    contraseña de MySQL y genera una clave secreta nueva:
 
@@ -23,10 +24,28 @@
    ```
 
    Pega el resultado en `secret_key`. No subas `instance/config.json` a GitHub.
-7. Para trasladar los expedientes existentes, exporta la base actual completa
-   e impórtala en el anfitrión; copia también `instance\uploads` por un medio
-   privado. `escuela_db.sql` contiene el esquema y usuarios iniciales, pero no
-   los registros actuales de estudiantes ni sus adjuntos.
+
+Las cuentas de acceso a la aplicación (tabla `usuarios`) son distintas del
+usuario MySQL `gabounermb`. `escuela_db.sql` contiene el esquema y las cuentas
+iniciales de la aplicación, pero no los expedientes actuales ni sus adjuntos.
+Obtén las credenciales iniciales del responsable del sistema por un canal
+privado; no las incluyas en estos documentos ni en el repositorio.
+
+## Migrar una instalación existente
+
+No importes `escuela_db.sql` y un respaldo completo de la base uno encima del
+otro. Elige el respaldo completo para conservar el esquema y los datos:
+
+1. Exporta la base de datos actual incluyendo estructura y datos.
+2. En la computadora anfitriona, crea la base vacía `escuela_ebngru` y carga
+   ese respaldo completo. No importes también `escuela_db.sql`.
+3. Copia `instance\uploads` por un medio privado; los archivos adjuntos no están
+   incluidos en el respaldo de MySQL.
+4. Comprueba que `instance\config.json` apunte a `escuela_ebngru` y que el
+   usuario MySQL configurado tenga permisos sobre esa base.
+
+Si el respaldo contiene solo los datos y no la estructura, importa primero
+`escuela_db.sql` y después el respaldo de datos.
 
 ## Iniciar el sistema
 

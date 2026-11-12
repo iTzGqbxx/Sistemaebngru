@@ -4,23 +4,34 @@ Aplicación web para administrar expedientes escolares. Está construida con
 Flask, MySQL y Waitress, y puede usarse desde otras computadoras de la misma
 red local.
 
+## Funciones principales
+
+- Consulta de expedientes y listados por grado y sección.
+- Filtros combinables por columna en los listados de grado.
+- Impresión de las filas visibles después de aplicar filtros.
+- Exportación a Excel de todos los registros del grado, aunque haya filtros
+  activos en la página.
+
 ## Requisitos
 
 - Windows
-- Python y las dependencias de `requirements.txt`
+- Python 3.14.8 (versión verificada; otras versiones aún no están certificadas)
+- Las dependencias de `requirements.txt`
 - XAMPP (servicio MySQL)
 
 ## Instalación rápida
 
-1. Instala Python y XAMPP en la computadora que alojará el sistema.
+1. Instala Python 3.14.8 y XAMPP en la computadora que alojará el sistema.
 2. Abre una terminal en esta carpeta e instala las dependencias:
 
    ```powershell
    python -m pip install -r requirements.txt
    ```
 
-3. Inicia MySQL desde el panel de XAMPP. Crea la base de datos e importa
-   `escuela_db.sql`.
+3. Inicia MySQL desde el panel de XAMPP. Para una instalación nueva, crea la
+   base `escuela_ebngru` e importa `escuela_db.sql`. Para migrar datos
+   existentes, sigue el procedimiento de
+   [migración en Windows](INSTALACION_ANFITRION_WINDOWS.md#migrar-una-instalacion-existente).
 4. Copia `config.example.json` como `instance\config.json` y completa la
    configuración de MySQL. Genera una clave secreta con:
 
@@ -53,3 +64,7 @@ pulsa `Ctrl+C` en ella para detener el servidor.
 
 Waitress sirve la aplicación por HTTP, sin cifrar el tráfico. Úsala solo en
 una red local privada y confiable; no expongas el puerto 5000 a Internet.
+
+Al cargar archivos manualmente en GitHub, `.gitignore` no los excluye
+automáticamente. No subas `instance\config.json` ni archivos de
+`instance\uploads`, porque pueden contener credenciales y documentos escolares.
