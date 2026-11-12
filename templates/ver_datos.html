@@ -196,8 +196,14 @@
                     <option value="D" {% if seccion_filter == 'D' %}selected{% endif %}>Sección D</option>
                 </select>
 
+                <select name="turno">
+                    <option value="">Todos los turnos</option>
+                    <option value="Matutino" {% if turno_filter == 'Matutino' %}selected{% endif %}>Matutino</option>
+                    <option value="Vespertino" {% if turno_filter == 'Vespertino' %}selected{% endif %}>Vespertino</option>
+                </select>
+
                 <button type="submit" class="btn-buscar">Buscar</button>
-                {% if search_query or grado_filter or seccion_filter %}
+                {% if search_query or grado_filter or seccion_filter or turno_filter %}
                     <a href="{{ url_for('ver_datos') }}" class="btn-limpiar">Limpiar</a>
                 {% endif %}
             </form>
@@ -213,7 +219,7 @@
                 <div class="lista-estudiantes">
                     {% for ins in grupo.list %}
                     <a class="enlace-estudiante" href="{{ url_for('ficha_estudiante', id=ins.id) }}">
-                        <span>{{ ins.nombre }} {{ ins.apellido }}</span>
+                        <span>{{ ins.nombre }} {{ ins.apellido }}{% if ins.turno %} <span class="turno-estudiante">({{ ins.turno }})</span>{% endif %}</span>
                         <span class="indicador-ficha" aria-hidden="true">&rarr;</span>
                     </a>
                     {% endfor %}

@@ -96,6 +96,14 @@
                         {% endif %}
                     </dd>
                 </div>
+                <div>
+                    <dt>Turno</dt>
+                    <dd class="dato-editable"><span class="dato-valor">{{ estudiante.turno or 'No registrado' }}</span>
+                        {% if puede_editar_expedientes %}
+                        <a class="lapiz-editar lapiz-editar-dato no-imprimir" href="{{ url_for('editar_inscripcion', id=estudiante.id, campo='turno') }}" aria-label="Editar turno" title="Editar turno"><span class="icono-lapiz">&#9998;</span></a>
+                        {% endif %}
+                    </dd>
+                </div>
             </dl>
         </section>
 
