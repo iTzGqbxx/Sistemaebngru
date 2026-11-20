@@ -67,7 +67,7 @@ app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 UPLOAD_FOLDER = Path(app.instance_path) / 'uploads'
 USUARIOS_GESTION_EXPEDIENTES = {'desarrollador', 'directora', 'directoraGRU'}
 ROLES_ADMINISTRACION = {'administracion', 'administrador', 'administracionGRU'}
-GRADOS_CURSADO = ('1er Grado', '2do Grado', '3er Grado', '4to Grado', '5to Grado')
+GRADOS_CURSADO = ('1er Grado', '2do Grado', '3er Grado', '4to Grado', '5to Grado', '6to Grado')
 SECCIONES = ('A', 'B', 'C', 'D')
 TURNOS = ('Matutino', 'Vespertino')
 COLUMNAS_EXPEDIENTE = (
@@ -935,7 +935,8 @@ def inscripcion():
             '2': '2do Grado',
             '3': '3er Grado',
             '4': '4to Grado',
-            '5': '5to Grado'
+            '5': '5to Grado',
+            '6': '6to Grado'
         }
         seccion = request.form.get('seccion', '').strip()
         if grado_num not in grado_nombres or seccion not in SECCIONES:

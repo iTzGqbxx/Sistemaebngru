@@ -6,7 +6,7 @@ red local.
 
 ## Funciones principales
 
-- Consulta de expedientes y listados por grado y sección.
+- Consulta de expedientes y listados desde 1er hasta 6to grado y por sección.
 - Filtros combinables por columna en los listados de grado.
 - Impresión de las filas visibles después de aplicar filtros.
 - Exportación a Excel de todos los registros del grado, aunque haya filtros
