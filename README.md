@@ -14,7 +14,7 @@ red local.
 
 ## Requisitos
 
-- Windows
+- Windows 10 u 11
 - Python 3.14.8 (versión verificada; otras versiones aún no están certificadas)
 - Las dependencias de `requirements.txt`
 - XAMPP (servicio MySQL)
